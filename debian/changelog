@@ -1,23 +1,30 @@
-mariadb-5.5 (5.5.1) unstable; urgency=low
+mariadb-5.5 (5.5.35-1) unstable; urgency=low
 
-  * Initial release.
+  * Remade Debian packaging to with pristine-tar etc best practises
+  * New package based directly on .35 to avoid big merge with .32 and .35
 
- -- Kristian Nielsen <knielsen@askmonty.org>  Fri, 6 Jan 2012 15:17:23 -0100
+ -- Otto Kekäläinen <otto@seravo.fi>  Wed, 29 Jan 2014 21:09:51 +0300
 
-mariadb-5.3 (5.3.0) unstable; urgency=low
+mariadb-5.5 (5.5.32-1) unstable; urgency=low
 
-  * Initial release.
+  [ Otto Kekäläinen ]
+  * Initial package for Debian (Closes: #565308), based on upstream
+    packaging:
+    - mariadb-5.3 by Sergei Golubchik
+    - mariadb-5.2 by Kristian Nielsen
+    - mariadb-5.1 by Peter Lieverdink
+  * Bring packaging up-to-date inline with mysql-5.5 packaging.
+  * Refine control file and tidy lintian warnings
+  * Rename libmysqlclient18 -> libmariadbclient18.
+  * Add suitable Breaks/Replaces/Provides to support migration
+    to/from mysql-server-5.5.
+  * Plus multiple other updates based on feedback from Debian maintainers
 
- -- Sergei Golubchik <serg@askmonty.org>  Mon, 1 Nov 2010 09:16:01 -0100
+  [ James Page ]
+  * d/control,rules: Cherry picked fix from mysql-5.5 packaging to disable
+    x86 assembler in taocrypt on i386 architectures, removing need for
+    gcc-4.4 dependency.
+  * d/control: Add myself to uploaders.
+  * d/control: Update Vcs fields for new location on git.debian.org.
 
-mariadb-5.2 (5.2.0) unstable; urgency=low
-
-  * Initial release.
-
- -- Kristian Nielsen <knielsen@askmonty.org>  Wed, 17 Mar 2010 12:54:51 -0100
-
-mariadb-5.1 (5.1.0) unstable; urgency=low
-
-  * Initial release.
-
- -- Peter Lieverdink <peter@openquery.com>  Tue, 29 Sep 2009 17:05:03 +1000
+ -- Otto Kekäläinen <otto@seravo.fi>  Tue, 24 Sept 2013 15:09:51 +0300
