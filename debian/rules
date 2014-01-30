@@ -63,14 +63,22 @@ ifneq ($(ARCH_OS),hurd)
 	if [ ! -d /proc/self ]; then echo "/proc IS NEEDED" 1>&2; exit 1; fi 
 endif
 
+	# debug
+	@echo "Arch $(ARCH)"
+	@echo "Distribution $(DISTRIBUTION)"
+	@echo "Release $(RELEASE)"
+
 # Remove OQGraph on Ubuntu 14.04 which does not have Boost 1.42..53 support
 # Ubuntu 14.04 has only libboost1.54/55-dev
 ifeq ($(DISTRIBUTION),Ubuntu)
-ifeq ($(RELEASE),12)
-	sed -i 's/, libboost1.48-dev | libboost1.49-dev//g' debian/control
+ifeq ($(RELEASE),14)
+	# too late as configure is run after build-dep installed
+	# sed -i 's/, libboost1.48-dev | libboost1.49-dev//g' debian/control
 	sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.files.in
 endif
 endif
+
+
 
 	( test -d $(builddir) || mkdir $(builddir) ) && cd $(builddir) && \
 	sh -c 'PATH=$${MYSQL_BUILD_PATH:-"/bin:/usr/bin:/usr/local/bin"} \
