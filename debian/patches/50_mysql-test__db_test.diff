@@ -8,11 +8,9 @@
 
 @DPATCH@
 
-Index: pkg-mariadb/mysql-test/mysql-test-run.pl
-===================================================================
---- pkg-mariadb.orig/mysql-test/mysql-test-run.pl	2013-03-04 18:36:06.100131154 +0200
-+++ pkg-mariadb/mysql-test/mysql-test-run.pl	2013-03-04 21:37:18.212356352 +0200
-@@ -3532,6 +3532,11 @@
+--- old/mysql-test/mysql-test-run.pl	2009-06-16 14:24:09.000000000 +0200
++++ new/mysql-test/mysql-test-run.pl	2009-07-04 00:03:34.000000000 +0200
+@@ -3578,6 +3578,11 @@ sub mysql_install_db {
      mtr_appendfile_to_file("$sql_dir/mysql_system_tables_data.sql",
  			   $bootstrap_sql_file);
  

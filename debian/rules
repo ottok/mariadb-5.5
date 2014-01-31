@@ -78,7 +78,7 @@ configure-stamp:
 	# Ubuntu 14.04 has only libboost1.54/55-dev
 	ifeq ($(DISTRIBUTION),Ubuntu)
 	ifeq ($(RELEASE),14)
-		sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.files.in
+		sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.install
 	endif
 	endif
 	
