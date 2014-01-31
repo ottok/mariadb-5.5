@@ -98,6 +98,7 @@ endif
 		-DCOMPILATION_COMMENT="mariadb.org binary distribution" \
 		-DSYSTEM_TYPE="debian-linux-gnu" \
 		-DCMAKE_SYSTEM_PROCESSOR="$(GNU_CPU)" \
+		-DCMAKE_CROSSCOMPILING=1 \
 		-DDEB=debian'
 
 	touch $@
