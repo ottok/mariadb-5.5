@@ -8,7 +8,6 @@ usr/lib/mysql/plugin/semisync_slave.so
 usr/lib/mysql/plugin/handlersocket.so
 usr/lib/mysql/plugin/sql_errlog.so
 etc/mysql/debian-start
-etc/mysql/conf.d/mysqld_safe_syslog.cnf
 usr/bin/msql2mysql
 usr/bin/my_print_defaults
 usr/bin/myisamchk
