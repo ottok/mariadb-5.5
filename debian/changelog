@@ -1,3 +1,11 @@
+mariadb-5.5 (5.5.35-1) unstable; urgency=low
+
+  * Remade Debian packaging to with pristine-tar etc best practises
+  * New package based directly on .35 to avoid big merge with .32 and .35
+  * Contents from Debian unstable accepted .32 moved here
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Wed, 29 Jan 2014 21:09:51 +0300
+
 mariadb-5.5 (5.5.32-1) unstable; urgency=low
 
   [ Otto Kekäläinen ]

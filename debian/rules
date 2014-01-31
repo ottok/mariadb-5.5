@@ -73,6 +73,15 @@ override_dh_prep:
 configure-stamp:
 	@echo "RULES.$@"
 	dh_testdir
+	
+	# Remove OQGraph on Ubuntu 14.04 which does not have Boost 1.42..53 support
+	# Ubuntu 14.04 has only libboost1.54/55-dev
+	ifeq ($(DISTRIBUTION),Ubuntu)
+	ifeq ($(RELEASE),14)
+		sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.files.in
+	endif
+	endif
+	
 	( test -d $(builddir) || mkdir $(builddir) ) && cd $(builddir) && \
 	sh -c  'PATH=$${MYSQL_BUILD_PATH:-"/bin:/usr/bin"} \
 	    	CC=$${MYSQL_BUILD_CC:-gcc} \
