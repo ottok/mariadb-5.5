@@ -1,21 +1,20 @@
 Source: mariadb-5.5
-Section: misc
+Section: database
 Priority: optional
-Maintainer: MariaDB Developers <maria-developers@lists.launchpad.net>
-XSBC-Original-Maintainer: Maria Developers <maria-developers@lists.launchpad.net>
-Uploaders: MariaDB Developers <maria-developers@lists.launchpad.net>
-Build-Depends: libtool (>= 1.4.2-7), procps | hurd,  debhelper, file (>= 3.28), libncurses5-dev (>= 5.0-6), perl (>= 5.6.0), libwrap0-dev (>= 7.6-8.3), zlib1g-dev (>= 1:1.1.3-5), libreadline-gplv2-dev, libevent-dev, libssl-dev, libpam0g-dev, psmisc, po-debconf, chrpath, automake1.9, dpatch, gawk, bison, lsb-release, hardening-wrapper, cmake (>= 2.7), libaio-dev, libboost1.48-dev | libboost1.49-dev | libboost1.54-dev
-Standards-Version: 3.8.3
+Maintainer: Debian MySQL Maintainers <pkg-mysql-maint@lists.alioth.debian.org>
+Uploaders: Otto Kekäläinen <otto@seravo.fi>, Clint Byrum <clint@ubuntu.com>, Nicholas Bamber <nicholas@periapt.co.uk>, James Page <jamespage@debian.org>
+Build-Depends: debhelper (>= 9), libaio-dev[linux-any], libncurses5-dev (>= 5.0-6), perl, libwrap0-dev (>= 7.6-8.3), zlib1g-dev (>= 1:1.1.3-5), libreadline-gplv2-dev, po-debconf, psmisc, chrpath, gawk, bison, lsb-release, hardening-wrapper, cmake, libssl-dev
+Standards-Version: 3.9.4
 Homepage: http://mariadb.org/
-Vcs-Browser: http://bazaar.launchpad.net/~maria-captains/maria/5.5/files
-Vcs-Bzr: bzr://lp:maria
+Vcs-Git: git://git.debian.org/git/pkg-mysql/pkg-mariadb.git
+Vcs-Browser: http://git.debian.org/?p=pkg-mysql/pkg-mariadb.git
 
 Package: libmariadbclient18
 Section: libs
 Architecture: any
-Depends: mariadb-common, libmysqlclient18 (= ${source:Version}), ${shlibs:Depends}, ${misc:Depends}
-Conflicts: mariadb-server-5.5 (<< 5.5.33), mariadb-galera-server-5.5 (<< 5.5.33),
-           mariadb-server-5.1, mariadb-server-5.2, mariadb-server-5.3
+Depends: mariadb-common, ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: multiarch-support, ${misc:Pre-Depends}
+Multi-Arch: same
 Description: MariaDB database client library
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -24,28 +23,14 @@ Description: MariaDB database client library
  .
  This package includes the client library.
 
-Package: libmysqlclient18
-Section: libs
-Architecture: any
-Depends: libmariadbclient18 (= ${source:Version})
-Replaces: libmysqlclient18 (<< ${source:Version})
-Description: Virtual package to satisfy external depends
- This is an empty package that provides an updated "best" version of
- libmysqlclient18 that does not conflict with the libmariadbclient18
- package.
- .
- MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
- server. SQL (Structured Query Language) is the most popular database query
- language in the world. The main goals of MariaDB are speed, robustness and
- ease of use.
-
 Package: libmariadbd-dev
 Architecture: any
 Section: libdevel
-Depends: libmariadbclient-dev (>= ${source:Version}), ${misc:Depends}
-Provides: libmysqld-dev
-Conflicts: libmysqld-dev
+Pre-Depends: multiarch-support
+Depends: libmariadbclient-dev (>= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
+Breaks: libmysqld-dev
 Replaces: libmysqld-dev
+Provides: libmysqld-dev
 Description: MariaDB embedded database development files
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -57,9 +42,9 @@ Description: MariaDB embedded database development files
 Package: libmariadbclient-dev
 Architecture: any
 Section: libdevel
-Depends: libmariadbclient18 (>= ${source:Version}), zlib1g-dev, , ${shlibs:Depends}, ${misc:Depends}
-Replaces: libmariadbclient16-dev, libmysqlclient16-dev
-Conflicts: libmysqlclient-dev, libmariadbclient16-dev, libmysqlclient14-dev, libmysqlclient12-dev, libmysqlclient10-dev, libmysqlclient15-dev, libmysqlclient16-dev
+Depends: libmariadbclient18 (= ${binary:Version}), zlib1g-dev, ${shlibs:Depends}, ${misc:Depends}
+Breaks: libmysqlclient-dev
+Replaces: libmysqlclient-dev
 Provides: libmysqlclient-dev
 Description: MariaDB database development files
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -69,48 +54,25 @@ Description: MariaDB database development files
  .
  This package includes development libraries and header files.
 
-Package: mysql-common
-Section: database
-Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: MariaDB database common files (e.g. /etc/mysql/my.cnf)
- MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
- server. SQL (Structured Query Language) is the most popular database query
- language in the world. The main goals of MariaDB are speed, robustness and
- ease of use.
- .
- This package includes files needed by all versions of the client library
- (e.g. /etc/mysql/my.cnf).
-
 Package: mariadb-common
-Section: database
 Architecture: all
-Depends: mysql-common, ${shlibs:Depends}, ${misc:Depends}
-Description: MariaDB database common files (e.g. /etc/mysql/conf.d/mariadb.cnf)
+Depends: mysql-common, ${misc:Depends}
+Multi-Arch: foreign
+Description: MariaDB common metapackage
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
  language in the world. The main goals of MariaDB are speed, robustness and
  ease of use.
  .
- This package includes files needed by all versions of the client library
- (e.g. /etc/mysql/conf.d/mariadb.cnf).
+ This empty metapackage makes the introduction on MariaDB specific
+ configurationfiles easier at any later time.
 
 Package: mariadb-client-core-5.5
 Architecture: any
 Depends: mariadb-common, libmariadbclient18 (>= ${source:Version}), ${shlibs:Depends}, ${misc:Depends}
-Provides: mysql-client-core, mysql-client-core-5.1, mysql-client-core-5.5
-Conflicts: mysql-client (<< 5.0.51), mysql-client-5.0,
-    mysql-client-5.1 (<< ${source:Version}), mysql-client-5.5 (<< ${source:Version}),
-    mysql-client-core-5.1, mysql-client-core-5.5,
-    mariadb-client-5.1, mariadb-client-core-5.1,
-    mariadb-client-5.2, mariadb-client-core-5.2,
-    mariadb-client-5.3, mariadb-client-core-5.3
-Replaces: mysql-client (<< 5.0.51), mysql-client-5.0,
-    mysql-client-5.1, mysql-client-5.5,
-    mysql-client-core-5.1, mysql-client-core-5.5,
-    mariadb-client-5.1, mariadb-client-core-5.1,
-    mariadb-client-5.2, mariadb-client-core-5.2,
-    mariadb-client-5.3, mariadb-client-core-5.3
+Conflicts: mysql-client-5.5
+Breaks: mysql-client-core-5.5
+Replaces: mysql-client-core-5.5
 Description: MariaDB database core client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -121,16 +83,12 @@ Description: MariaDB database core client binaries
 
 Package: mariadb-client-5.5
 Architecture: any
-Depends: debianutils (>=1.6), libdbi-perl, libdbd-mysql-perl (>= 1.2202), mariadb-common, libmariadbclient18 (>= ${source:Version}), mariadb-client-core-5.5 (>= ${source:Version}), ${perl:Depends}, ${shlibs:Depends}, ${misc:Depends}
-Provides: virtual-mysql-client, mysql-client,
-    mysql-client-4.1, mysql-client-5.1, mysql-client-5.5
-Conflicts: mysql-client (<< 5.0.51), mysql-client-5.0, mysql-client-5.1,
-    mariadb-client (<< ${source:Version}),
-    mariadb-client-5.1, mariadb-client-5.2, mariadb-client-5.3, mysql-client-5.5
-Replaces: mysql-client (<< 5.0.51), mysql-client-5.0, mysql-client-5.1,
-    mysql-client-5.5,
-    mariadb-client (<< ${source:Version}),
-    mariadb-client-5.1, mariadb-client-5.2, mariadb-client-5.3
+Depends: debianutils (>=1.6), libdbi-perl, mariadb-client-core-5.5 (>= ${source:Version}), ${perl:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Recommends: libdbd-mysql-perl (>= 1.2202)
+Conflicts: mysql-client-core-5.5
+Breaks: mysql-client-5.5
+Replaces: mysql-client-5.5
+Provides: virtual-mysql-client
 Description: MariaDB database client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -142,20 +100,10 @@ Description: MariaDB database client binaries
 
 Package: mariadb-server-core-5.5
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmariadbclient18 (>= ${binary:Version})
-Provides: mysql-server-core, mysql-server-core-5.1, mysql-server-core-5.5
-Conflicts: mariadb-server-5.1 (<< 5.1.60),
-    mariadb-server-5.2 (<< 5.2.10),
-    mariadb-server-5.3 (<< 5.3.3),
-    mysql-server-5.0,
-    mysql-server-core-5.0, mysql-server-core-5.1, mysql-server-core-5.5,
-    mariadb-server-core-5.1, mariadb-server-core-5.2, mariadb-server-core-5.5
-Replaces: mariadb-server-5.1 (<< 5.1.60),
-    mariadb-server-5.2 (<< 5.2.10),
-    mariadb-server-5.3 (<< 5.3.3),
-    mysql-server-5.0,
-    mysql-server-core-5.0, mysql-server-core-5.1, mysql-server-core-5.5,
-    mariadb-server-core-5.1, mariadb-server-core-5.2, mariadb-server-core-5.5
+Depends: mariadb-common, ${shlibs:Depends}, ${misc:Depends}
+Conflicts: mysql-server-5.5
+Breaks: mysql-server-core-5.5
+Replaces: mysql-server-core-5.5
 Description: MariaDB database core server files
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -165,15 +113,10 @@ Description: MariaDB database core server files
  This package includes the core server files, as used by Akonadi.
 
 Package: mariadb-test-5.5
-Section: database
 Architecture: any
-Depends: mariadb-server-5.5 (= ${source:Version}), mariadb-client-5.5 (= ${source:Version})
-Conflicts: mariadb-test (<< ${source:Version}),
-    mariadb-test-5.1, mariadb-test-5.2, mariadb-test-5.3,
-    mariadb-server-5.5 (<< 5.5.33), mariadb-galera-server-5.5 (<< 5.5.33)
-Suggests: patch
-Replaces: mariadb-test (<< ${source:Version}),
-    mariadb-test-5.1, mariadb-test-5.2, mariadb-test-5.3
+Depends: mariadb-server-5.5 (>= ${source:Version}), mariadb-client-5.5 (>= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
+Breaks: mariadb-test (<< ${source:Version}), mysql-testsuite-5.5
+Replaces: mariadb-test (<< ${source:Version}), mysql-testsuite-5.5
 Description: MariaDB database regression test suite
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -188,16 +131,10 @@ Suggests: tinyca, mailx, mariadb-test
 Recommends: libhtml-template-perl
 Pre-Depends: mariadb-common, adduser (>= 3.40), debconf
 Depends: mariadb-client-5.5 (>= ${source:Version}), libdbi-perl, perl (>= 5.6), ${shlibs:Depends}, ${misc:Depends}, psmisc, passwd, lsb-base (>= 3.0-10), mariadb-server-core-5.5 (>= ${binary:Version})
-Provides: mariadb-server, mysql-server, virtual-mysql-server
-Conflicts: mariadb-server (<< ${source:Version}), mysql-server (<< ${source:Version}),
-    mysql-server-4.1, mysql-server-5.0, mysql-server-5.1, mysql-server-5.5,
-    mariadb-server-5.1, mariadb-server-5.2, mariadb-server-5.3,
-    mariadb-tokudb-engine-5.5
-Replaces: mariadb-server (<< ${source:Version}), mysql-server (<< ${source:Version}),
-    mysql-server-4.1, mysql-server-5.0, mysql-server-5.1, mysql-server-5.5,
-    mariadb-server-5.1, mariadb-server-5.2, mariadb-server-5.3,
-    libmariadbclient16 (<< 5.3.4), libmariadbclient-dev (<< 5.5.0),
-    mariadb-tokudb-engine-5.5
+Conflicts: mysql-server-core-5.5
+Breaks: mysql-server-5.5
+Replaces: mysql-server-5.5
+Provides: virtual-mysql-server
 Description: MariaDB database server binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -207,9 +144,10 @@ Description: MariaDB database server binaries
  This package includes the server binaries.
 
 Package: mariadb-server
-Section: database
 Architecture: all
-Depends: mariadb-server-5.5 (= ${source:Version}), ${misc:Depends}
+Depends: mariadb-server-5.5 (>= ${source:Version}), ${misc:Depends}
+Breaks: mysql-server
+Replaces: mysql-server
 Description: MariaDB database server (metapackage depending on the latest version)
  This is an empty package that depends on the current "best" version of
  mariadb-server (currently mariadb-server-5.5), as determined by the MariaDB
@@ -223,21 +161,22 @@ Description: MariaDB database server (metapackage depending on the latest versio
  ease of use.
 
 Package: mariadb-client
-Section: database
 Architecture: all
-Depends: mariadb-client-5.5 (= ${source:Version}), ${misc:Depends}
+Depends: mariadb-client-5.5 (>= ${source:Version}), ${misc:Depends}
+Breaks: mysql-client
+Replaces: mysql-client
 Description: MariaDB database client (metapackage depending on the latest version)
  This is an empty package that depends on the current "best" version of
  mariadb-client (currently mariadb-client-5.5), as determined by the MariaDB
  maintainers.  Install this package if in doubt about which MariaDB version
- you want, as this is the one we consider to be in the best shape.
+ you want, as this is the one considered to be in the best shape.
 
 Package: mariadb-test
-Section: database
 Architecture: all
-Depends: mariadb-test-5.5 (= ${source:Version})
-Description: MariaDB database regression test suite (metapackage depending on the latest version)
+Depends: mariadb-test-5.5 (>= ${source:Version}), ${misc:Depends}
+Breaks: mysql-testsuite
+Replaces: mysql-testsuite
+Description: MariaDB database regression test suite (metapackage for the latest version)
  This is an empty package that depends on the current "best" version of
  mariadb-test (currently mariadb-test-5.5), as determined by the MariaDB
  maintainers.
-

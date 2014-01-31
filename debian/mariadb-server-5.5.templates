@@ -44,13 +44,6 @@ _Description: Remove all MariaDB databases?
  recent version or if a different mariadb-server package is already
  using it, the data should be kept.
 
-Template: mysql-server-5.1/start_on_boot
-Type: boolean
-Default: true
-_Description: Start the MariaDB server on boot?
- The MariaDB server can be launched automatically at boot time or manually
- with the '/etc/init.d/mysql start' command.
-
 Template: mysql-server/root_password
 Type: password
 _Description: New password for the MariaDB "root" user:
@@ -87,3 +80,15 @@ _Description: NDB Cluster seems to be in use
  MySQL-5.1 no longer provides NDB Cluster support. Please migrate to the new
  mysql-cluster package and remove all lines starting with "ndb" from
  all config files below /etc/mysql/.
+
+Template: mariadb-server/oneway_migration
+Type: boolean
+Default: true
+_Description: Really migrate to MariaDB?
+ MariaDB is a drop-in replacement for MySQL. It will use your current
+ configuration file (my.cnf) and current databases.
+ .
+ Note that MariaDB has some enhanced features, which do not exist in MySQL
+ and thus migration back to MySQL might not always work, at least not as
+ automatically as migrating from MySQL to MariaDB.
+
