@@ -37,7 +37,7 @@ endif
 
 USE_ASSEMBLER:=--enable-assembler
 
-ifneq (,$(filter $(ARCH), amd64 i386 kfreebsd-i386))
+ifneq (,$(filter $(ARCH), amd64 kfreebsd-amd64 i386 kfreebsd-i386 ia64 s390 s390x))
     TESTSUITE_FAIL_CMD:=exit 1
 else
     TESTSUITE_FAIL_CMD:=true
@@ -124,8 +124,18 @@ auto_install-stamp:
 	@echo "RULES.$@"
 	dh_testdir
 	dh_testroot
+	
+	# some self written manpages which hopefully
+	# gets overwritten sooner or later with upstreams
+	mkdir -p $(TMP)/usr/share/man/man1/
+	mkdir -p $(TMP)/usr/share/man/man8/
+	cp debian/additions/*.1 $(TMP)/usr/share/man/man1/
+	mkdir -p $(TMP)/etc/mysql/conf.d/
+	cp debian/additions/mysqld_safe_syslog.cnf $(TMP)/etc/mysql/conf.d/
+	
 	# make install (trailing slash needed for innobase)
 	cd $(builddir) && $(MAKE) install DESTDIR=$(TMP)/
+	
 	# After installing, remove rpath to make lintian happy.
 	set +e; \
 	find ./debian/tmp/ -type f -print0 \
@@ -134,12 +144,28 @@ auto_install-stamp:
 		| cut -d: -f 1 \
 		| xargs --no-run-if-empty chrpath -d; \
 	set -e
+	
+	# libmysqlclient-dev: forgotten header file since 3.23.25?
+	cp $(BUILDDIR)/include/my_config.h $(TMP)/usr/include/mysql/
+	cp include/my_dir.h $(TMP)/usr/include/mysql/
+	
+	# mariadb-common: MariaDB-specific config stuff.
+	install -d $(TMP)/etc/mysql/conf.d
+	install -m 0644 debian/additions/mariadb.cnf $(TMP)/etc/mysql/conf.d/mariadb.cnf
+	
+	# mariadb-client
+	install -m 0755 debian/additions/mysqlreport $(TMP)/usr/bin/
+	install -m 0755 debian/additions/innotop/innotop $(TMP)/usr/bin/
+	install -m 0644 debian/additions/innotop/innotop.1 $(TMP)/usr/share/man/man1/
+	
 	# mariadb-server
 	rm -vf $(TMP)/usr/share/mysql/mi_test_all* \
 	       $(TMP)/usr/share/mysql/mysql-log-rotate \
 	       $(TMP)/usr/share/mysql/mysql.server \
 	       $(TMP)/usr/share/mysql/binary-configure
-	nm -n $(BUILDDIR)/sql/mysqld |gzip -9 > debian/mysqld.sym.gz
+	nm -n $(BUILDDIR)/sql/mysqld |gzip -9 > $(TMP)/usr/share/doc/mariadb-server-5.5/mysqld.sym.gz
+	# Below didn't work, use more explicit command above
+	# nm -n $(BUILDDIR)/sql/mysqld |gzip -9 > debian/mysqld.sym.gz
 	mkdir -p $(TMP)/etc/mysql/conf.d/
 	install -m 0755 debian/additions/echo_stderr $(TMP)/usr/share/mysql/
 	install -m 0755 debian/additions/debian-start $(TMP)/etc/mysql/

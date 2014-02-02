@@ -8,6 +8,7 @@ usr/lib/mysql/plugin/semisync_slave.so
 usr/lib/mysql/plugin/handlersocket.so
 usr/lib/mysql/plugin/sql_errlog.so
 etc/mysql/debian-start
+etc/mysql/conf.d/mysqld_safe_syslog.cnf
 usr/bin/msql2mysql
 usr/bin/my_print_defaults
 usr/bin/myisamchk
@@ -35,6 +36,7 @@ usr/bin/perror
 usr/bin/replace
 usr/bin/resolve_stack_dump
 usr/bin/resolveip
+usr/share/doc/mariadb-server-5.5/mysqld.sym.gz
 usr/share/doc/mariadb-server-5.5/INFO_SRC
 usr/share/doc/mariadb-server-5.5/INFO_BIN
 usr/share/man/man1/msql2mysql.1
