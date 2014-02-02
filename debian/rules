@@ -80,7 +80,6 @@ configure-stamp:
 	    	CXX=$${MYSQL_BUILD_CXX:-g++} \
 	    	CXXFLAGS=$${MYSQL_BUILD_CXXFLAGS:-"-O3 -DBIG_JOINS=1 -felide-constructors -fno-exceptions -fno-rtti -fno-strict-aliasing ${TAOCRYPT_OPT}"} \
 	    cmake -DCMAKE_INSTALL_PREFIX=/usr \
-		-DCMAKE_VERBOSE_MAKEFILE=ON \
 		$(USE_STATIC_MYSQLD) \
 	    -DCOMPILATION_COMMENT="($(DISTRIBUTION))" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEBVERSION)" \
