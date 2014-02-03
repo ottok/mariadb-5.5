@@ -48,8 +48,9 @@ msgstr ""
 msgid ""
 "There is no guarantee that the version you're currently installing will be "
 "able to use the current databases."
-msgstr "Il n'est pas garanti que cette version puisse en utiliser les bases "
-"de données."
+msgstr ""
+"Il n'est pas garanti que cette version puisse en utiliser les bases de "
+"données."
 
 #. Type: note
 #. Description
@@ -163,9 +164,6 @@ msgstr ""
 #. Type: error
 #. Description
 #: ../mariadb-server-5.5.templates:7001
-#| msgid ""
-#| "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
-#| "more information."
 msgid ""
 "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 "more information."
@@ -230,9 +228,9 @@ msgid ""
 "automatically as migrating from MySQL to MariaDB."
 msgstr ""
 "Veuillez noter que MariaDB fournit des fonctionnalités améliorées qui "
-"n'existent pas dans MySQL ce qui peut interdire un retour ultérieur à "
-"MySQL, tout au moins de manière moins automatique que la migration de MySQL "
-"vers MariaDB."
+"n'existent pas dans MySQL ce qui peut interdire un retour ultérieur à MySQL, "
+"tout au moins de manière moins automatique que la migration de MySQL vers "
+"MariaDB."
 
 #~ msgid "Start the MariaDB server on boot?"
 #~ msgstr "Faut-il lancer MariaDB au démarrage ?"
