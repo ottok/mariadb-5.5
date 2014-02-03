@@ -27,6 +27,7 @@ DEB_UPSTREAM_VERSION_MAJOR_MINOR := $(shell echo $(DEB_UPSTREAM_VERSION) | sed -
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 DISTRIBUTION := $(shell lsb_release -i -s)
+RELEASE := $(shell lsb_release -r -s)
 
 MAKE_TEST_TARGET:=test-force
 ifneq ($(findstring fulltest,$(DEB_BUILD_OPTIONS)),)
@@ -90,12 +91,11 @@ configure-stamp:
 	    -DINSTALL_SUPPORTFILESDIR=share/mysql \
 		-DDEB=1 ..'
 	touch $@
-
-# Remove OQGraph on Ubuntu 14.04 which does not have Boost 1.42..53 support
-# Ubuntu 14.04 has only libboost1.54/55-dev
+	touch debug-distribution-$(DISTRIBUTION)
 ifeq ($(DISTRIBUTION),Ubuntu)
-ifeq ($(RELEASE),14)
-	sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.install
+	touch debug-release-$(RELEASE)
+ifeq ($(RELEASE),14.04)
+	sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.install.in
 endif
 endif
 
