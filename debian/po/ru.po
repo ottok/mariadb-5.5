@@ -1,32 +1,22 @@
 # translation of ru.po to Russian
-# Russian messages:
-#    Translators, if you are not familiar with the PO format, gettext
-#    documentation is worth reading, especially sections dedicated to
-#    this format, e.g. by running:
-#         info -n '(gettext)PO Files'
-#         info -n '(gettext)Header Entry'#
-#    Some information specific to po-debconf are available at
-#            /usr/share/doc/po-debconf/README-trans
-#         or http://www.debian.org/intl/l10n/po-debconf/README-trans#
-#    Developers do not need to manually edit POT or PO files.
 #
 # Ilgiz Kalmetev <translator@ilgiz.pp.ru>, 2003.
 # Yuriy Talakan' <yt@amur.elektra.ru>, 2005, 2006.
 # Yuriy Talakan' <yt@drsk.ru>, 2007.
-# Yuri Kozlov <yuray@komyakino.ru>, 2009.
+# Yuri Kozlov <yuray@komyakino.ru>, 2009, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: mysql-dfsg-5.1 5.1.37-1\n"
+"Project-Id-Version: mariadb 5.5_5.5.32-1\n"
 "Report-Msgid-Bugs-To: mariadb-5.5@packages.debian.org\n"
 "POT-Creation-Date: 2013-09-09 12:48+0300\n"
-"PO-Revision-Date: 2009-08-06 20:27+0400\n"
+"PO-Revision-Date: 2014-01-07 07:18+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.4\n"
 "Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -117,7 +107,7 @@ msgstr ""
 #. Description
 #: ../mariadb-server-5.5.templates:5001
 msgid "New password for the MariaDB \"root\" user:"
-msgstr "Новый пароль для MariaDB пользователя \"root\":"
+msgstr "Новый пароль для MariaDB пользователя «root»:"
 
 #. Type: password
 #. Description
@@ -127,7 +117,7 @@ msgid ""
 "the MariaDB administrative \"root\" user."
 msgstr ""
 "Хотя и необязательно, но настоятельно рекомендуется установить пароль для "
-"административного пользователя MariaDB \"root\"."
+"административного пользователя MariaDB «root»."
 
 #. Type: password
 #. Description
@@ -139,13 +129,13 @@ msgstr "Если оставить поле пустым, то пароль из�
 #. Description
 #: ../mariadb-server-5.5.templates:6001
 msgid "Repeat password for the MariaDB \"root\" user:"
-msgstr "Повторите ввод пароля для MariaDB пользователя \"root\":"
+msgstr "Повторите ввод пароля для MariaDB пользователя «root»:"
 
 #. Type: error
 #. Description
 #: ../mariadb-server-5.5.templates:7001
 msgid "Unable to set password for the MariaDB \"root\" user"
-msgstr "Невозможно задать пароль MariaDB пользователю \"root\""
+msgstr "Невозможно задать пароль MariaDB пользователю «root»"
 
 #. Type: error
 #. Description
@@ -168,7 +158,6 @@ msgstr "Проверьте пароль учётной записи после �
 #. Type: error
 #. Description
 #: ../mariadb-server-5.5.templates:7001
-#, fuzzy
 #| msgid ""
 #| "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 #| "more information."
@@ -176,7 +165,7 @@ msgid ""
 "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 "more information."
 msgstr ""
-"Подробности см. в файле /usr/share/doc/mariadb-server-5.5/README.Debian."
+"Подробности смотрите в файле /usr/share/doc/mariadb-server-5.5/README.Debian."
 
 #. Type: error
 #. Description
@@ -205,14 +194,14 @@ msgid ""
 "config files below /etc/mysql/."
 msgstr ""
 "MySQL-5.1 больше не поддерживает NDB Cluster. Переходите на новый пакет "
-"mysql-cluster и удалите все строки, начинающиеся с \"ndb\", из всех файлов "
+"mysql-cluster и удалите все строки, начинающиеся с «ndb», из всех файлов "
 "настройки в каталоге /etc/mysql/."
 
 #. Type: boolean
 #. Description
 #: ../mariadb-server-5.5.templates:10001
 msgid "Really migrate to MariaDB?"
-msgstr ""
+msgstr "Хотите перейти на MariaDB?"
 
 #. Type: boolean
 #. Description
@@ -221,6 +210,8 @@ msgid ""
 "MariaDB is a drop-in replacement for MySQL. It will use your current "
 "configuration file (my.cnf) and current databases."
 msgstr ""
+"MariaDB — современная замена MySQL. Будет использован ваш файл настроек "
+"(my.cnf) и имеющиеся базы данных."
 
 #. Type: boolean
 #. Description
@@ -230,6 +221,9 @@ msgid ""
 "and thus migration back to MySQL might not always work, at least not as "
 "automatically as migrating from MySQL to MariaDB."
 msgstr ""
+"Заметим, что MariaDB имеет дополнительные возможности, которые отсутствуют "
+"в MySQL, и поэтому обратный переход на MySQL не всегда может быть выполнен, "
+"по крайней мере, не в автоматическом режиме как с MySQL на MariaDB."
 
 #~ msgid "Start the MariaDB server on boot?"
 #~ msgstr "Запускать MariaDB при загрузке системы?"

@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the mysql-dfsg-* packages.
 #
 # Translators:
-# Christian Perrier <bubulle@debian.org>, 2004, 2006, 2007, 2009.
+# Christian Perrier <bubulle@debian.org>, 2004, 2006, 2007, 2009, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: fr\n"
 "Report-Msgid-Bugs-To: mariadb-5.5@packages.debian.org\n"
 "POT-Creation-Date: 2013-09-09 12:48+0300\n"
-"PO-Revision-Date: 2009-08-08 14:56+0200\n"
+"PO-Revision-Date: 2013-12-25 12:47+0100\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "Language: fr\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "debian.org>\n"
-"X-Generator: Lokalize 0.3\n"
+"X-Generator: Lokalize 1.5\n"
 "Plural-Forms: Plural-Forms: nplurals=2; plural=n>1;\n"
 
 #. Type: boolean
@@ -48,7 +48,8 @@ msgstr ""
 msgid ""
 "There is no guarantee that the version you're currently installing will be "
 "able to use the current databases."
-msgstr "Il n'est pas garanti que cette version puisse en utiliser les données."
+msgstr "Il n'est pas garanti que cette version puisse en utiliser les bases "
+"de données."
 
 #. Type: note
 #. Description
@@ -100,8 +101,9 @@ msgid ""
 "recent version or if a different mariadb-server package is already using it, "
 "the data should be kept."
 msgstr ""
-"Si vous prévoyez d'installer une version plus récente de MariaDB ou si un "
-"autre paquet mariadb-server les utilise déjà, vous devriez les conserver."
+"Si vous retirez le paquet MariaDB en vue d'en installer une version plus "
+"récente ou si un autre paquet mariadb-server les utilise déjà, vous devriez "
+"les conserver."
 
 #. Type: password
 #. Description
@@ -161,7 +163,6 @@ msgstr ""
 #. Type: error
 #. Description
 #: ../mariadb-server-5.5.templates:7001
-#, fuzzy
 #| msgid ""
 #| "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 #| "more information."
@@ -169,8 +170,8 @@ msgid ""
 "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 "more information."
 msgstr ""
-"Veuillez consulter le fichier /usr/share/doc/mysql-server-5.5/README.Debian "
-"pour plus d'informations."
+"Veuillez consulter le fichier /usr/share/doc/mariadb-server-5.5/README."
+"Debian pour plus d'informations."
 
 #. Type: error
 #. Description
@@ -208,7 +209,7 @@ msgstr ""
 #. Description
 #: ../mariadb-server-5.5.templates:10001
 msgid "Really migrate to MariaDB?"
-msgstr ""
+msgstr "Souhaitez-vous migrer vers MariaDB ?"
 
 #. Type: boolean
 #. Description
@@ -217,6 +218,8 @@ msgid ""
 "MariaDB is a drop-in replacement for MySQL. It will use your current "
 "configuration file (my.cnf) and current databases."
 msgstr ""
+"MariaDB remplace à l'identique MySQL. Le fichier de configuration actuel (my."
+"cnf) ainsi que les bases de données existantes seront utilisés."
 
 #. Type: boolean
 #. Description
@@ -226,6 +229,10 @@ msgid ""
 "and thus migration back to MySQL might not always work, at least not as "
 "automatically as migrating from MySQL to MariaDB."
 msgstr ""
+"Veuillez noter que MariaDB fournit des fonctionnalités améliorées qui "
+"n'existent pas dans MySQL ce qui peut interdire un retour ultérieur à "
+"MySQL, tout au moins de manière moins automatique que la migration de MySQL "
+"vers MariaDB."
 
 #~ msgid "Start the MariaDB server on boot?"
 #~ msgstr "Faut-il lancer MariaDB au démarrage ?"

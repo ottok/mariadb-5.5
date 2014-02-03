@@ -14,10 +14,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: mysql-dfsg-5.1 5.1.37-1\n"
+"Project-Id-Version: mariadb-5.5 5.5.32-1\n"
 "Report-Msgid-Bugs-To: mariadb-5.5@packages.debian.org\n"
 "POT-Creation-Date: 2013-09-09 12:48+0300\n"
-"PO-Revision-Date: 2009-09-01 08:25+0900\n"
+"PO-Revision-Date: 2013-09-09 18:48+0900\n"
 "Last-Translator: Hideki Yamane (Debian-JP) <henrich@debian.or.jp>\n"
 "Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
 "Language: ja\n"
@@ -167,10 +167,6 @@ msgstr ""
 #. Type: error
 #. Description
 #: ../mariadb-server-5.5.templates:7001
-#, fuzzy
-#| msgid ""
-#| "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
-#| "more information."
 msgid ""
 "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 "more information."
@@ -203,7 +199,7 @@ msgid ""
 "mysql-cluster package and remove all lines starting with \"ndb\" from all "
 "config files below /etc/mysql/."
 msgstr ""
-"MySQL-5.1 では NDB クラスタのサポートを提供しなくなっています。新たな mysql-"
+"MySQL-5.1 で NDB クラスタのサポートを提供しなくなりました。新たな mysql-"
 "cluster パッケージに移行して、/etc/mysql 以下の設定ファイルすべてから「ndb」"
 "で始まる行を削除してください。"
 
@@ -211,7 +207,7 @@ msgstr ""
 #. Description
 #: ../mariadb-server-5.5.templates:10001
 msgid "Really migrate to MariaDB?"
-msgstr ""
+msgstr "本当に MariaDB に移行しますか?"
 
 #. Type: boolean
 #. Description
@@ -220,6 +216,8 @@ msgid ""
 "MariaDB is a drop-in replacement for MySQL. It will use your current "
 "configuration file (my.cnf) and current databases."
 msgstr ""
+"MariaDB は MySQL をそのまま置き換えられる代替です。現在の設定ファイル (my."
+"cnf) と現在のデータベースを利用します。"
 
 #. Type: boolean
 #. Description
@@ -229,13 +227,6 @@ msgid ""
 "and thus migration back to MySQL might not always work, at least not as "
 "automatically as migrating from MySQL to MariaDB."
 msgstr ""
-
-#~ msgid "Start the MariaDB server on boot?"
-#~ msgstr "MariaDB をシステム起動時に開始しますか?"
-
-#~ msgid ""
-#~ "The MariaDB server can be launched automatically at boot time or manually "
-#~ "with the '/etc/init.d/mysql start' command."
-#~ msgstr ""
-#~ "MariaDB の起動方法について、システム起動時に自動的に開始するか、あるいは "
-#~ "'/etc/init.d/mysql start' と手で入力して起動するかを選べます。"
+"MariaDB には MySQL に存在していない機能の拡張がいくらか存在し、そのため MySQL "
+"に再び移行する場合は、MySQL から MariaDB への移行のような自動での移行が常にで"
+"きるとは限りません。"
