@@ -121,8 +121,7 @@ build-stamp:
 override_dh_auto_test:
 	@echo "RULES.$@"
 ifeq ($(findstring nocheck,$(DEB_BUILD_OPTIONS)),)
-	# disable test temporary
-	# cd $(builddir) && $(MAKE) $(MAKE_TEST_TARGET) || $(TESTSUITE_FAIL_CMD) ;
+	cd $(builddir) && $(MAKE) $(MAKE_TEST_TARGET) || $(TESTSUITE_FAIL_CMD) ;
 endif
 
 override_dh_auto_install: auto_install-stamp
