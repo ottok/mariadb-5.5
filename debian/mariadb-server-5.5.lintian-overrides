@@ -12,3 +12,5 @@ mariadb-server-5.5: command-with-path-in-maintainer-script postinst:146 /bin/bas
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:194 /bin/echo
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:208 /bin/echo
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:216 /bin/echo
+# OK in neẃer Debian, includes support for xz
+mariadb-server-5.5: data.tar.xz-member-without-dpkg-pre-depends
