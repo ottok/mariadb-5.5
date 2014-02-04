@@ -1,0 +1,19 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 80_skip_socket_test_if_user_undefined <otto@seravo.fi>
+##
+
+@DPATCH@
+=== modified file 'mysql-test/suite/plugins/t/unix_socket.test'
+--- old/mysql-test/suite/plugins/t/unix_socket.test	2013-05-14 12:49:52 +0000
++++ new/mysql-test/suite/plugins/t/unix_socket.test	2014-02-03 21:25:29 +0000
+@@ -7,6 +7,10 @@
+   skip No auth_socket plugin;
+ }
+ 
++if (!$USER) {
++  skip USER variable is undefined;
++}
++
+ let $plugindir=`SELECT @@global.plugin_dir`;
+ 
+ eval install plugin unix_socket soname '$AUTH_SOCKET_SO';
