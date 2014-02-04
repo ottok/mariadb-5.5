@@ -74,6 +74,17 @@ override_dh_prep:
 configure-stamp:
 	@echo "RULES.$@"
 	dh_testdir
+	
+	# Rename shared libraries SONAME and filenames
+	# libmysqlclient18.so > libmariadbclient18.so etc
+	sed -i 's/mysqlclient/mariadbclient/g' client/CMakeLists.txt tests/CMakeLists.txt libmysql/CMakeLists.txt scripts/CMakeLists.txt
+	sed -i 's/mysqlclient/mariadbclient/g' libmysql/libmysql.ver.in
+	sed -i 's/mysqlclient/mariadbclient/g' man/mysql_config.1
+	sed -i 's/mysqlclient/mariadbclient/g' scripts/make_win_bin_dist scripts/mysql_config.sh scripts/mysql_config.pl.in
+	# Patch 44_scripts__mysql_config__libs also contains 'mysqlclient' but is compatible with this
+	# Stuff in storage/ndb/* is not compiled, no need to sed it.
+	# Neither does RPM packaging related files or comments in other code need sedding.
+	
 	( test -d $(builddir) || mkdir $(builddir) ) && cd $(builddir) && \
 	sh -c  'PATH=$${MYSQL_BUILD_PATH:-"/bin:/usr/bin"} \
 	    	CC=$${MYSQL_BUILD_CC:-gcc} \
@@ -90,14 +101,15 @@ configure-stamp:
 	    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
 	    -DINSTALL_SUPPORTFILESDIR=share/mysql \
 		-DDEB=1 ..'
-	touch $@
-	touch debug-distribution-$(DISTRIBUTION)
+	@echo "Debug: DISTRIBUTION=$(DISTRIBUTION)"
 ifeq ($(DISTRIBUTION),Ubuntu)
-	touch debug-release-$(RELEASE)
+	@echo "Debug: RELEASE=$(RELEASE)"
 ifeq ($(RELEASE),14.04)
 	sed -i '/ha_oqgraph.so/d' debian/mariadb-server-5.5.install.in
+	@echo "Debug: ha_oqgraph.so removed from 'mariadb-server-5.5.install.in'"
 endif
 endif
+	touch $@
 
 override_dh_auto_build: build-stamp
 
@@ -168,17 +180,6 @@ auto_install-stamp:
 	install -m 0644 $(builddir)/Docs/INFO_SRC $(TMP)/usr/share/doc/mariadb-server-5.5/INFO_SRC
 	install -m 0644 $(builddir)/Docs/INFO_BIN $(TMP)/usr/share/doc/mariadb-server-5.5/INFO_BIN
 	
-	# Rename libmysqlclient18.x to libmariadbclient18.x
-	# Leave old files in place for -dev packages to use
-	cp $(SHARED_LIBS_DIR)/libmysqlclient.a $(SHARED_LIBS_DIR)/libmariadbclient.a
-	cp $(SHARED_LIBS_DIR)/libmysqlclient.so.18.0.0 $(SHARED_LIBS_DIR)/libmariadbclient.so.18.0.0
-	# Also rename links including link targets
-	# libmysqlclient.so -> libmysqlclient.so.18
-	# libmysqlclient.so.18 -> libmysqlclient.so.18.0.0
-	ln -s libmariadbclient.so.18 $(SHARED_LIBS_DIR)/libmariadbclient.so
-	ln -s libmariadbclient.so.18.0.0 $(SHARED_LIBS_DIR)/libmariadbclient.so.18
-	# Available in libmariadbclient-dev
-	cp $(SHARED_LIBS_DIR)/libmysqlservices.a $(SHARED_LIBS_DIR)/libmariadbservices.a
 	# mariadb-test
 	mv $(TMP)/usr/mysql-test $(TMP)/usr/share/mysql
 	touch $@
