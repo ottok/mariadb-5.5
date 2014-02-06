@@ -10,6 +10,7 @@ mariadb-5.5 (5.5.35-1) unstable; urgency=low
   * Updated French debconf translation (Closes: #736480)
   * Upstream includes fix for CVE-2014-0001 (Closes: #737597)
   * Renamed SONAME properly (Closes: #732967)
+  * Package tested to be Ubuntu-compatible (LP: #519478)
 
  -- Otto Kekäläinen <otto@seravo.fi>  Wed, 29 Jan 2014 21:09:51 +0300
 
