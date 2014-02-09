@@ -50,7 +50,6 @@ this_version=5.5
 
 # Show warning if old data exists
 if [ -d $DATADIR ]; then
-  db_fset mariadb-server/oneway_migration seen false || true
   db_input high mariadb-server/oneway_migration || true
   db_go
   db_get mariadb-server/oneway_migration || true
@@ -60,6 +59,8 @@ if [ -d $DATADIR ]; then
     exit 1
   fi
 fi
+# Notice the uses of "|| true"  to  prevent  the  script  from  dying
+# For details see man page debconf-devel(7)
 
 # Abort if an NDB cluster is in use.
 if egrep -qi -r '^[^#]*ndb.connectstring|^[[:space:]]*\[[[:space:]]*ndb_mgmd' /etc/mysql/; then
