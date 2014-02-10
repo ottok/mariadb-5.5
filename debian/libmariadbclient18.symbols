@@ -1,3 +1,6 @@
+dialog.so libmariadbclient18 #MINVER#
+ _mysql_client_plugin_declaration_@Base 5.5.35
+ get_tty_password_buff@Base 5.5.35
 libmariadbclient.so.18 libmariadbclient18 #MINVER#
  PSI_hook@Base 5.5.35
  PSI_server@Base 5.5.35
@@ -963,3 +966,5 @@ libmariadbclient.so.18 libmariadbclient18 #MINVER#
  vio_write@Base 5.5.35
  wait_for_free_space@Base 5.5.35
  year_2000_handling@Base 5.5.35
+mysql_clear_password.so libmariadbclient18 #MINVER#
+ _mysql_client_plugin_declaration_@Base 5.5.35
