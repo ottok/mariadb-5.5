@@ -5,4 +5,5 @@
 50_mysql-test__db_test.diff
 61_replace_dash_with_bash_mbug675185.diff
 80_skip_socket_test_if_user_undefined.diff
+81_clean_up_also_backup_files.diff
 99_rename_mariadb-server_files_in.diff
