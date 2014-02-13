@@ -4,7 +4,7 @@
  ENDIF()
  
  
-+SET(MTR_FORCE perl ./mysql-test-run.pl --force --testcase-timeout=30)
++SET(MTR_FORCE perl ./mysql-test-run.pl --force --testcase-timeout=30 --suite-timeout=540)
 -SET(MTR_FORCE perl ./mysql-test-run.pl --force)
  IF(EXISTS ${CMAKE_SOURCE_DIR}/mysql-test/suite/nist)
    SET(TEST_NIST ${MTR_FORCE} --comment=nist suite=nist ${EXP} && 
