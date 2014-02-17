@@ -169,7 +169,7 @@ Package: mariadb-server-5.5
 Architecture: any
 Suggests: mailx, mariadb-test, tinyca
 Recommends: libhtml-template-perl
-Pre-Depends: mariadb-common, adduser (>= 3.40), debconf
+Pre-Depends: adduser (>= 3.40), debconf, mariadb-common
 Depends: libdbi-perl,
          lsb-base (>= 3.0-10),
          mariadb-client-5.5 (>= ${source:Version}),
