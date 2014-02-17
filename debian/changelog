@@ -1,5 +1,6 @@
 mariadb-5.5 (5.5.35-1) unstable; urgency=low
 
+  [ Otto Kekäläinen ]
   * New upstream release:
     - CVE-2014-0001 (Closes: #737597)
   * Upstream https://mariadb.atlassian.net/browse/MDEV-4902
@@ -9,7 +10,7 @@ mariadb-5.5 (5.5.35-1) unstable; urgency=low
   * Updated French debconf translation (Closes: #736480)
   * Renamed SONAME properly (Closes: #732967)
 
- -- Otto Kekäläinen <otto@seravo.fi>  Wed, 29 Jan 2014 21:09:51 +0300
+ -- James Page <jamespage@debian.org>  Mon, 17 Feb 2014 16:51:52 +0000
 
 mariadb-5.5 (5.5.32-1) unstable; urgency=low
 
