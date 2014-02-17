@@ -82,10 +82,6 @@ usr/share/mysql/mysql-test/suite/vcol
 usr/share/mysql/mysql-test/suite/vcol/inc
 usr/share/mysql/mysql-test/suite/vcol/t
 usr/share/mysql/mysql-test/suite/vcol/r
-usr/share/mysql/mysql-test/suite/oqgraph
-usr/share/mysql/mysql-test/suite/oqgraph/t
-usr/share/mysql/mysql-test/suite/oqgraph/r
-usr/share/mysql/mysql-test/suite/oqgraph/include
 usr/share/mysql/mysql-test/std_data
 usr/share/mysql/mysql-test/std_data/ndb_backup50
 usr/share/mysql/mysql-test/std_data/parts
