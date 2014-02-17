@@ -7,4 +7,4 @@
 80_skip_socket_test_if_user_undefined.diff
 81_clean_up_also_backup_files.diff
 82_extend_default_test_timeout_for_tokudb.diff
-99_rename_mariadb-server_files_in.diff
+99_remove_rename_mariadb-server_files_in.diff
