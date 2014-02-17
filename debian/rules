@@ -29,12 +29,6 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 DISTRIBUTION := $(shell lsb_release -i -s)
 RELEASE := $(shell lsb_release -r -s)
 
-# Disable TokuDB due to
-# * i386 does not work and CMakeLists.txt check for processor does not detect correct ARCH in chroot
-# * Build errors in Trusty: https://mariadb.atlassian.net/browse/MDEV-5618
-# * There was ugly code in CMakeLists.txt that touched stuff in debian/* that needs to be re-written
-export WITHOUT_TOKUDB=true
-
 MAKE_TEST_TARGET:=test-force
 ifneq ($(findstring fulltest,$(DEB_BUILD_OPTIONS)),)
 # make test-bt is the testsuite run by the MySQL build team
@@ -102,12 +96,20 @@ configure-stamp:
 	    -DCOMPILATION_COMMENT="($(DISTRIBUTION))" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEBVERSION)" \
 	    -DSYSTEM_TYPE="debian-$(DEB_BUILD_GNU_SYSTEM)" \
+	    -DWITHOUT_TOKUDB=true \
 	    -DBUILD_CONFIG=mysql_release \
 	    -DINSTALL_LIBDIR=lib/$(DEB_HOST_MULTIARCH) \
 	    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
 	    -DINSTALL_SUPPORTFILESDIR=share/mysql \
 		-DDEB=1 ..'
 	touch $@
+
+# Disable TokuDB above due to
+# * i386 does not work and CMakeLists.txt check for processor does not detect
+#   correct ARCH in chroot
+# * Build errors in Trusty: https://mariadb.atlassian.net/browse/MDEV-5618
+# * There was ugly code in CMakeLists.txt that touched stuff in debian/*
+#   that needs to be re-written
 
 override_dh_auto_build: build-stamp
 
