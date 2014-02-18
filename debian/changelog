@@ -1,6 +1,7 @@
 mariadb-5.5 (5.5.35-2) UNRELEASED; urgency=medium
 
   * d/control: Drop Nicholas from Uploaders, MIA (Closes: #739360).
+  * d/control: Add libjemalloc-dev to BD's.
 
  -- James Page <jamespage@debian.org>  Tue, 18 Feb 2014 09:16:47 +0000
 
