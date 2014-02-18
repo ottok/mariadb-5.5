@@ -4,7 +4,6 @@ Priority: optional
 Maintainer: Debian MySQL Maintainers <pkg-mysql-maint@lists.alioth.debian.org>
 Uploaders: Otto Kekäläinen <otto@seravo.fi>,
            Clint Byrum <clint@ubuntu.com>,
-           Nicholas Bamber <nicholas@periapt.co.uk>,
            James Page <jamespage@debian.org>
 Build-Depends: bison,
                chrpath,
