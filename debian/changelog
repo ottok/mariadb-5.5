@@ -1,8 +1,19 @@
 mariadb-5.5 (5.5.35-1) unstable; urgency=low
 
   [ Otto Kekäläinen ]
-  * New upstream release:
-    - CVE-2014-0001 (Closes: #737597)
+  * New upstream release, fixing the following security issues:
+    - Buffer overflow in client/mysql.cc (Closes: #737597).
+      - CVE-2014-0001
+    - http://www.oracle.com/technetwork/topics/security/cpujan2014-1972949.html
+      - CVE-2013-5891
+      - CVE-2013-5908
+      - CVE-2014-0386
+      - CVE-2014-0393
+      - CVE-2014-0401
+      - CVE-2014-0402
+      - CVE-2014-0412
+      - CVE-2014-0420
+      - CVE-2014-0437
   * Upstream https://mariadb.atlassian.net/browse/MDEV-4902
     fixes compatibility with Bison 3.0 (Closes: #733002)
   * Updated Russian debconf translation (Closes: #734426)
