@@ -1,9 +1,3 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 80_skip_socket_test_if_user_undefined <otto@seravo.fi>
-##
-
-@DPATCH@
-=== modified file 'mysql-test/suite/plugins/t/unix_socket.test'
 --- old/mysql-test/suite/plugins/t/unix_socket.test	2013-05-14 12:49:52 +0000
 +++ new/mysql-test/suite/plugins/t/unix_socket.test	2014-02-05 10:25:37 +0000
 @@ -3,10 +3,23 @@

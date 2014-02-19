@@ -1,10 +1,8 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
 ## 99-unnamed.dpatch by  <ch@debian.org>
 ##
-## All lines beginning with `## DP:' are a description of the patch.
+
 ## DP: Removes unnecessary library dependencies. See #390692
 
-@DPATCH@
 diff -Nur mysql-dfsg-5.1-5.1.31.orig/scripts/mysql_config.sh mysql-dfsg-5.1-5.1.31/scripts/mysql_config.sh
 --- mysql-dfsg-5.1-5.1.31.orig/scripts/mysql_config.sh  2009-01-19 17:30:55.000000000 +0100
 +++ mysql-dfsg-5.1-5.1.31/scripts/mysql_config.sh       2009-02-08 17:17:48.000000000 +0100

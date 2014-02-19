@@ -1,4 +1,3 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
 ## 33_scripts__mysql_create_system_tables__no_test.dpatch by  <ch@debian.org>
 ##
 ## All lines beginning with `## DP:' are a description of the patch.
@@ -7,7 +6,6 @@
 ## DP: circumstances as it is checked first. See #301741.
 ## DP: http://bugs.mysql.com/bug.php?id=6901
 
-@DPATCH@
 --- old/scripts/mysql_system_tables_data.sql	2008-12-04 22:59:44.000000000 +0100
 +++ new/scripts/mysql_system_tables_data.sql	2008-12-04 23:00:07.000000000 +0100
 @@ -30,8 +30,6 @@ SELECT LOWER( REPLACE((SELECT REPLACE(@@

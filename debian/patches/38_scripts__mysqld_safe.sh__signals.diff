@@ -1,11 +1,8 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
 ## 38_scripts__mysqld_safe.sh__signals.dpatch by  <ch@debian.org>
 ##
 ## All lines beginning with `## DP:' are a description of the patch.
 ## DP: Executes /etc/init.d/mysql on signals
 ## DP: Reported as http://bugs.mysql.com/bug.php?id=31361
-
-@DPATCH@
 
 --- a/scripts/mysqld_safe.sh	2013-01-11 16:02:41 +0000
 +++ b/scripts/mysqld_safe.sh	2013-01-11 16:03:14 +0000
