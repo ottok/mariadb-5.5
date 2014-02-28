@@ -101,9 +101,9 @@ Depends: libmariadbclient18 (>= ${source:Version}),
          mariadb-common,
          ${misc:Depends},
          ${shlibs:Depends}
-Conflicts: mysql-client-5.5
-Breaks: mysql-client-core-5.5
-Replaces: mysql-client-core-5.5
+Conflicts: mysql-client-5.5, mysql-client-5.6
+Breaks: mysql-client-core-5.5, mysql-client-core-5.6
+Replaces: mysql-client-core-5.5, mysql-client-core-5.6
 Description: MariaDB database core client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -121,9 +121,9 @@ Depends: debianutils (>=1.6),
          ${perl:Depends},
          ${shlibs:Depends}
 Recommends: libdbd-mysql-perl (>= 1.2202)
-Conflicts: mysql-client-core-5.5
-Breaks: mysql-client-5.5
-Replaces: mysql-client-5.5
+Conflicts: mysql-client-core-5.5, mysql-client-core-5.6
+Breaks: mysql-client-5.5, mysql-client-5.6
+Replaces: mysql-client-5.5, mysql-client-5.6
 Provides: virtual-mysql-client
 Description: MariaDB database client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -137,9 +137,9 @@ Description: MariaDB database client binaries
 Package: mariadb-server-core-5.5
 Architecture: any
 Depends: mariadb-common, ${misc:Depends}, ${shlibs:Depends}
-Conflicts: mysql-server-5.5
-Breaks: mysql-server-core-5.5
-Replaces: mysql-server-core-5.5
+Conflicts: mysql-server-5.5, mysql-server-5.6
+Breaks: mysql-server-core-5.5, mysql-server-core-5.6
+Replaces: mysql-server-core-5.5, mysql-server-core-5.6
 Description: MariaDB database core server files
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
  server. SQL (Structured Query Language) is the most popular database query
@@ -154,8 +154,8 @@ Depends: mariadb-client-5.5 (>= ${source:Version}),
          mariadb-server-5.5 (>= ${source:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
-Breaks: mariadb-test (<< ${source:Version}), mysql-testsuite-5.5
-Replaces: mariadb-test (<< ${source:Version}), mysql-testsuite-5.5
+Breaks: mariadb-test (<< ${source:Version}), mysql-testsuite-5.5, mysql-testsuite-5.6
+Replaces: mariadb-test (<< ${source:Version}), mysql-testsuite-5.5, mysql-testsuite-5.6
 Suggests: patch
 Description: MariaDB database regression test suite
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -179,9 +179,9 @@ Depends: libdbi-perl,
          psmisc,
          ${misc:Depends},
          ${shlibs:Depends}
-Conflicts: mariadb-tokudb-engine-5.5, mysql-server-core-5.5
-Breaks: mariadb-tokudb-engine-5.5, mysql-server-5.5
-Replaces: mariadb-tokudb-engine-5.5, mysql-server-5.5
+Conflicts: mariadb-tokudb-engine-5.5, mysql-server-core-5.5, mysql-server-core-5.6
+Breaks: mariadb-tokudb-engine-5.5, mysql-server-5.5, mysql-server-5.6
+Replaces: mariadb-tokudb-engine-5.5, mysql-server-5.5, mysql-server-5.6
 Provides: virtual-mysql-server
 Description: MariaDB database server binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
