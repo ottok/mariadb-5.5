@@ -137,7 +137,7 @@ Description: MariaDB database client binaries
 Package: mariadb-server-core-5.5
 Architecture: any
 Depends: mariadb-common, ${misc:Depends}, ${shlibs:Depends}
-Conflicts: mysql-server-5.5, mysql-server-5.6
+Conflicts: mysql-server-5.5, mysql-server-5.6, mariadb-galera-server-5.5
 Breaks: mysql-server-core-5.5, mysql-server-core-5.6
 Replaces: mysql-server-core-5.5, mysql-server-core-5.6
 Description: MariaDB database core server files
@@ -180,8 +180,8 @@ Depends: libdbi-perl,
          ${misc:Depends},
          ${shlibs:Depends}
 Conflicts: mariadb-tokudb-engine-5.5, mysql-server-core-5.5, mysql-server-core-5.6
-Breaks: mariadb-tokudb-engine-5.5, mysql-server-5.5, mysql-server-5.6
-Replaces: mariadb-tokudb-engine-5.5, mysql-server-5.5, mysql-server-5.6
+Breaks: mariadb-tokudb-engine-5.5, mysql-server-5.5, mysql-server-5.6, mariadb-galera-server-5.5
+Replaces: mariadb-tokudb-engine-5.5, mysql-server-5.5, mysql-server-5.6, mariadb-galera-server-5.5
 Provides: virtual-mysql-server
 Description: MariaDB database server binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -194,8 +194,8 @@ Description: MariaDB database server binaries
 Package: mariadb-server
 Architecture: all
 Depends: mariadb-server-5.5 (>= ${source:Version}), ${misc:Depends}
-Breaks: mysql-server
-Replaces: mysql-server
+Breaks: mysql-server, mariadb-galera-server
+Replaces: mysql-server, mariadb-galera-server
 Description: MariaDB database server (metapackage depending on the latest version)
  This is an empty package that depends on the current "best" version of
  mariadb-server (currently mariadb-server-5.5), as determined by the MariaDB
