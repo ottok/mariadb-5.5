@@ -19,7 +19,7 @@ _Description: Really proceed with downgrade?
  There is no guarantee that the version you're currently installing
  will be able to use the current databases.
 
-Template: mysql-server-5.1/nis_warning
+Template: mysql-server-5.5/nis_warning
 Type: note
 #flag:translate!:3,5
 _Description: Important note for NIS/YP users
@@ -33,7 +33,7 @@ _Description: Important note for NIS/YP users
  .
   /var/lib/mysql: drwxr-xr-x   mysql    mysql
 
-Template: mysql-server-5.1/postrm_remove_databases
+Template: mysql-server-5.5/postrm_remove_databases
 Type: boolean
 Default: false
 _Description: Remove all MariaDB databases?
