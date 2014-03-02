@@ -77,8 +77,8 @@ configure-stamp:
 	
 	# Rename shared libraries SONAME and filenames
 	# libmysqlclient18.so > libmariadbclient18.so etc
-	sed -i 's/mysqlclient/mariadbclient/g' client/CMakeLists.txt tests/CMakeLists.txt libmysql/CMakeLists.txt scripts/CMakeLists.txt
-	sed -i 's/mysqlclient/mariadbclient/g' libmysql/libmysql.ver.in
+	sed -i 's/mysqlclient/mariadbclient/g' client/CMakeLists.txt tests/CMakeLists.txt scripts/CMakeLists.txt
+	sed -i 's/mysqlclient/mariadbclient/g' libmysql/CMakeLists.txt libmysql/libmysql_versions.ld.in
 	sed -i 's/mysqlclient/mariadbclient/g' man/mysql_config.1
 	sed -i 's/mysqlclient/mariadbclient/g' scripts/make_win_bin_dist scripts/mysql_config.sh scripts/mysql_config.pl.in
 	# Patch 44_scripts__mysql_config__libs also contains 'mysqlclient' but is compatible with this
