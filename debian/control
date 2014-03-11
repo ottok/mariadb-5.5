@@ -103,7 +103,9 @@ Depends: libmariadbclient18 (>= ${source:Version}),
          ${shlibs:Depends}
 Conflicts: mysql-client-5.5, mysql-client-5.6
 Breaks: mysql-client-core-5.5, mysql-client-core-5.6, virtual-mysql-client-core
-Replaces: mysql-client-core-5.5, mysql-client-core-5.6, virtual-mysql-client-core
+Replaces: mysql-client-core-5.5,
+          mysql-client-core-5.6,
+          virtual-mysql-client-core
 Provides: virtual-mysql-client-core
 Description: MariaDB database core client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -140,7 +142,9 @@ Architecture: any
 Depends: mariadb-common, ${misc:Depends}, ${shlibs:Depends}
 Conflicts: mariadb-galera-server-5.5, mysql-server-5.5, mysql-server-5.6
 Breaks: mysql-server-core-5.5, mysql-server-core-5.6, virtual-mysql-server-core
-Replaces: mysql-server-core-5.5, mysql-server-core-5.6, virtual-mysql-server-core
+Replaces: mysql-server-core-5.5,
+          mysql-server-core-5.6,
+          virtual-mysql-server-core
 Provides: virtual-mysql-server-core
 Description: MariaDB database core server files
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -157,12 +161,12 @@ Depends: mariadb-client-5.5 (>= ${source:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: mariadb-test (<< ${source:Version}),
-        mysql-testsuite
+        mysql-testsuite,
         mysql-testsuite-5.5,
         mysql-testsuite-5.6,
         virtual-mysql-testsuite
 Replaces: mariadb-test (<< ${source:Version}),
-          mysql-testsuite
+          mysql-testsuite,
           mysql-testsuite-5.5,
           mysql-testsuite-5.6,
           virtual-mysql-testsuite
@@ -194,21 +198,21 @@ Conflicts: mariadb-tokudb-engine-10.0,
            mariadb-tokudb-engine-5.5,
            mysql-server-core-5.5,
            mysql-server-core-5.6
-Breaks: mariadb-galera-server-5.5,
+Breaks: mariadb-galera-server,
+        mariadb-galera-server-5.5,
         mariadb-tokudb-engine-10.0,
         mariadb-tokudb-engine-5.5,
+        mysql-server,
         mysql-server-5.5,
         mysql-server-5.6,
-        mariadb-galera-server,
-        mysql-server,
         virtual-mysql-server
-Replaces: mariadb-galera-server-5.5,
+Replaces: mariadb-galera-server,
+          mariadb-galera-server-5.5,
           mariadb-tokudb-engine-10.0,
           mariadb-tokudb-engine-5.5,
-          mysql-server-5.5,
-          mysql-server-5.6
-          mariadb-galera-server,
           mysql-server,
+          mysql-server-5.5,
+          mysql-server-5.6,
           virtual-mysql-server
 Provides: virtual-mysql-server
 Description: MariaDB database server binaries
