@@ -105,8 +105,8 @@ case "${1:-''}" in
 	    # Could be removed during boot
 	    test -e /var/run/mysqld || install -m 755 -o mysql -g root -d /var/run/mysqld
 
-	    # Start MariaDB! 
-  	    /usr/bin/mysqld_safe "${@:2}" > /dev/null 2>&1 &
+	    # Start MariaDB!
+  	    /usr/bin/mysqld_safe "${@:2}" 2>&1 >/dev/null | $ERR_LOGGER &
 
 	    # 6s was reported in #352070 to be too few when using ndbcluster
 	    for i in $(seq 1 "${MYSQLD_STARTUP_TIMEOUT:-30}"); do
@@ -161,7 +161,7 @@ case "${1:-''}" in
 
   'restart')
 	set +e; $SELF stop; set -e
-	$SELF start 
+	$SELF start "${@}"
 	;;
 
   'reload'|'force-reload')
