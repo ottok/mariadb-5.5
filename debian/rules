@@ -180,6 +180,12 @@ auto_install-stamp:
 	install -m 0644 $(builddir)/Docs/INFO_SRC $(TMP)/usr/share/doc/mariadb-server-5.5/INFO_SRC
 	install -m 0644 $(builddir)/Docs/INFO_BIN $(TMP)/usr/share/doc/mariadb-server-5.5/INFO_BIN
 	
+	# install AppArmor profile
+	install -D -m 644 debian/apparmor-profile $(TMP)/etc/apparmor.d/usr.sbin.mysqld
+	
+	# install Apport hook
+	install -D -m 644 debian/mariadb-server-5.5.py $(TMP)/usr/share/apport/package-hooks/source_mariadb-5.5.py
+	
 	# mariadb-test
 	mv $(TMP)/usr/mysql-test $(TMP)/usr/share/mysql
 	touch $@
