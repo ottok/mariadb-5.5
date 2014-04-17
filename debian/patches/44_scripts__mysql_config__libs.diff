@@ -1,11 +1,7 @@
 ## 99-unnamed.dpatch by  <ch@debian.org>
-##
-
 ## DP: Removes unnecessary library dependencies. See #390692
-
-diff -Nur mysql-dfsg-5.1-5.1.31.orig/scripts/mysql_config.sh mysql-dfsg-5.1-5.1.31/scripts/mysql_config.sh
---- mysql-dfsg-5.1-5.1.31.orig/scripts/mysql_config.sh  2009-01-19 17:30:55.000000000 +0100
-+++ mysql-dfsg-5.1-5.1.31/scripts/mysql_config.sh       2009-02-08 17:17:48.000000000 +0100
+--- old/scripts/mysql_config.sh	2014-04-17 22:07:38.668960760 +0300
++++ new/scripts/mysql_config.sh	2014-04-17 22:08:33.528958126 +0300
 @@ -106,10 +106,10 @@
  
  # Create options 
