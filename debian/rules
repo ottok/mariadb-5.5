@@ -16,6 +16,11 @@ ifneq (,$(filter $(ARCH), i386 kfreebsd-i386 hurd-i386))
     TAOCRYPT_OPT="-DTAOCRYPT_DISABLE_X86ASM"
 endif
 
+# Skip TokuDB if arch is not amd64
+ifneq ($(findstring amd64,$(ARCH)),)
+    TOKUDB_OPT="-DWITHOUT_TOKUDB=true"
+endif
+
 export MYSQL_BUILD_CC=$(DEB_HOST_GNU_TYPE)-gcc
 export MYSQL_BUILD_CXX=$(DEB_HOST_GNU_TYPE)-g++
 
@@ -95,8 +100,7 @@ configure-stamp:
 		$(USE_STATIC_MYSQLD) \
 	    -DCOMPILATION_COMMENT="($(DISTRIBUTION))" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEBVERSION)" \
-	    -DSYSTEM_TYPE="debian-$(DEB_BUILD_GNU_SYSTEM)" \
-	    -DWITHOUT_TOKUDB=true \
+	    -DSYSTEM_TYPE="debian-$(DEB_BUILD_GNU_SYSTEM)" $(TOKUDB_OPT) \
 	    -DBUILD_CONFIG=mysql_release \
 	    -DINSTALL_LIBDIR=lib/$(DEB_HOST_MULTIARCH) \
 	    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
@@ -130,6 +134,10 @@ auto_install-stamp:
 	@echo "RULES.$@"
 	dh_testdir
 	dh_testroot
+	
+	# If TokuDB plugin was built
+	# add it to the server install list.
+	[ ! -f $(BUILDDIR)/usr/lib/mysql/plugin/ha_tokudb.so ] || echo 'usr/lib/mysql/plugin/ha_tokudb.so\netc/mysql/conf.d/tokudb.cnf\nusr/bin/tokuftdump\nusr/share/doc/mariadb-server-5.5/README-TOKUDB\nusr/share/doc/mariadb-server-5.5/README.md' >> debian/mariadb-server-5.5.install
 	
 	# some self written manpages which hopefully
 	# gets overwritten sooner or later with upstreams

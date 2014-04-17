@@ -1,5 +1,6 @@
 mariadb-5.5 (5.5.36-2) unstable; urgency=low
 
+  * Re-enabled TokuDB with "if arch amd64" in d/rules
   * Applied patch to log init output better
     (Closes https://mariadb.atlassian.net/browse/MDEV-5957)
 
