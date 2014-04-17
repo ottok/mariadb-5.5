@@ -4,10 +4,13 @@ dialog.so libmariadbclient18 #MINVER#
 libmariadbclient.so.18 libmariadbclient18 #MINVER#
  THR_KEY_mysys@libmariadbclient_16 5.5.36
  THR_KEY_mysys@libmariadbclient_18 5.5.36
+ alloc_dynamic@libmariadbclient_18 5.5.37
+ alloc_root@libmariadbclient_18 5.5.37
  client_errors@libmariadbclient_16 5.5.36
  client_errors@libmariadbclient_18 5.5.36
  default_charset_info@libmariadbclient_16 5.5.36
  default_charset_info@libmariadbclient_18 5.5.36
+ delete_dynamic@libmariadbclient_18 5.5.37
  dynamic_column_create@libmariadbclient_18 5.5.36
  dynamic_column_create_many@libmariadbclient_18 5.5.36
  dynamic_column_delete@libmariadbclient_18 5.5.36
@@ -17,28 +20,48 @@ libmariadbclient.so.18 libmariadbclient18 #MINVER#
  dynamic_column_prepare_decimal@libmariadbclient_18 5.5.36
  dynamic_column_update@libmariadbclient_18 5.5.36
  dynamic_column_update_many@libmariadbclient_18 5.5.36
+ dynstr_append@libmariadbclient_18 5.5.37
+ dynstr_append_mem@libmariadbclient_18 5.5.37
+ dynstr_append_os_quoted@libmariadbclient_18 5.5.37
+ dynstr_free@libmariadbclient_18 5.5.37
+ dynstr_realloc@libmariadbclient_18 5.5.37
  free_defaults@libmariadbclient_16 5.5.36
  free_defaults@libmariadbclient_18 5.5.36
+ free_root@libmariadbclient_18 5.5.37
  get_charset@libmariadbclient_16 5.5.36
  get_charset@libmariadbclient_18 5.5.36
  get_charset_by_csname@libmariadbclient_16 5.5.36
  get_charset_by_csname@libmariadbclient_18 5.5.36
+ get_dynamic@libmariadbclient_18 5.5.37
  get_tty_password@libmariadbclient_16 5.5.36
  get_tty_password@libmariadbclient_18 5.5.36
  handle_options@libmariadbclient_16 5.5.36
  handle_options@libmariadbclient_18 5.5.36
+ init_dynamic_array2@libmariadbclient_18 5.5.37
+ init_dynamic_string@libmariadbclient_18 5.5.37
+ int2str@libmariadbclient_18 5.5.37
  is_prefix@libmariadbclient_16 5.5.36
  is_prefix@libmariadbclient_18 5.5.36
  libmariadbclient_16@libmariadbclient_16 5.5.36
  libmariadbclient_18@libmariadbclient_18 5.5.36
+ list_add@libmariadbclient_18 5.5.37
+ list_delete@libmariadbclient_18 5.5.37
  load_defaults@libmariadbclient_16 5.5.36
  load_defaults@libmariadbclient_18 5.5.36
+ make_scrambled_password@libmariadbclient_18 5.5.37
+ make_scrambled_password_323@libmariadbclient_18 5.5.37
+ my_end@libmariadbclient_18 5.5.37
+ my_free@libmariadbclient_18 5.5.37
  my_init@libmariadbclient_16 5.5.36
  my_init@libmariadbclient_18 5.5.36
  my_make_scrambled_password@libmariadbclient_16 5.5.36
  my_make_scrambled_password@libmariadbclient_18 5.5.36
+ my_malloc@libmariadbclient_18 5.5.37
+ my_memdup@libmariadbclient_18 5.5.37
  my_print_help@libmariadbclient_16 5.5.36
  my_print_help@libmariadbclient_18 5.5.36
+ my_realloc@libmariadbclient_18 5.5.37
+ my_strdup@libmariadbclient_18 5.5.37
  myodbc_remove_escape@libmariadbclient_16 5.5.36
  myodbc_remove_escape@libmariadbclient_18 5.5.36
  mysql_affected_rows@libmariadbclient_16 5.5.36
@@ -340,5 +363,12 @@ libmariadbclient.so.18 libmariadbclient18 #MINVER#
  net_realloc@libmariadbclient_18 5.5.36
  scramble@libmariadbclient_16 5.5.36
  scramble@libmariadbclient_18 5.5.36
+ set_dynamic@libmariadbclient_18 5.5.37
+ strdup_root@libmariadbclient_18 5.5.37
+ strend@libmariadbclient_18 5.5.37
+ strfill@libmariadbclient_18 5.5.37
+ strmake@libmariadbclient_18 5.5.37
+ strmake_root@libmariadbclient_18 5.5.37
+ strxmov@libmariadbclient_18 5.5.37
 mysql_clear_password.so libmariadbclient18 #MINVER#
  _mysql_client_plugin_declaration_@Base 5.5.35
