@@ -1283,7 +1283,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 725 "/home/buildbot/buildbot/build/sql/sql_yacc.yy"
+#line 732 "/home/buildbot/buildbot/build/sql/sql_yacc.yy"
 
   int  num;
   ulong ulong_num;

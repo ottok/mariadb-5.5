@@ -125,6 +125,7 @@ Depends: debianutils (>=1.6),
          ${perl:Depends},
          ${shlibs:Depends}
 Recommends: libdbd-mysql-perl (>= 1.2202)
+Suggests: libterm-readkey-perl
 Conflicts: mysql-client-core-5.5, mysql-client-core-5.6
 Breaks: mysql-client, mysql-client-5.5, mysql-client-5.6, virtual-mysql-client
 Replaces: mysql-client, mysql-client-5.5, mysql-client-5.6, virtual-mysql-client

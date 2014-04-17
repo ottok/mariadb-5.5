@@ -937,9 +937,12 @@ public:
       is_handled= TRUE;
       break;
 
+    case ER_BAD_FIELD_ERROR:
+    case ER_SP_DOES_NOT_EXIST:
     case ER_NO_SUCH_TABLE:
     case ER_NO_SUCH_TABLE_IN_ENGINE:
-      /* Established behavior: warn if underlying tables are missing. */
+      /* Established behavior: warn if underlying tables, columns, or functions
+         are missing. */
       push_warning_printf(thd, MYSQL_ERROR::WARN_LEVEL_WARN, 
                           ER_VIEW_INVALID,
                           ER(ER_VIEW_INVALID),
@@ -948,15 +951,6 @@ public:
       is_handled= TRUE;
       break;
 
-    case ER_SP_DOES_NOT_EXIST:
-      /* Established behavior: warn if underlying functions are missing. */
-      push_warning_printf(thd, MYSQL_ERROR::WARN_LEVEL_WARN, 
-                          ER_VIEW_INVALID,
-                          ER(ER_VIEW_INVALID),
-                          m_top_view->get_db_name(),
-                          m_top_view->get_table_name());
-      is_handled= TRUE;
-      break;
     default:
       is_handled= FALSE;
     }
@@ -2703,7 +2697,7 @@ static bool show_status_array(THD *thd, const char *wild,
           end= int10_to_str((long) *(uint*) value, buff, 10);
           break;
         case SHOW_SINT:
-          end= int10_to_str((long) *(uint*) value, buff, -10);
+          end= int10_to_str((long) *(int*) value, buff, -10);
           break;
         case SHOW_SLONG:
           end= int10_to_str(*(long*) value, buff, -10);
