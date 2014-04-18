@@ -17,7 +17,7 @@ ifneq (,$(filter $(ARCH), i386 kfreebsd-i386 hurd-i386))
 endif
 
 # Skip TokuDB if arch is not amd64
-ifneq ($(findstring amd64,$(ARCH)),)
+ifneq ($(ARCH), amd64)
     TOKUDB_OPT="-DWITHOUT_TOKUDB=true"
 endif
 
@@ -107,13 +107,6 @@ configure-stamp:
 	    -DINSTALL_SUPPORTFILESDIR=share/mysql \
 		-DDEB=1 ..'
 	touch $@
-
-# Disable TokuDB above due to
-# * i386 does not work and CMakeLists.txt check for processor does not detect
-#   correct ARCH in chroot
-# * Build errors in Trusty: https://mariadb.atlassian.net/browse/MDEV-5618
-# * There was ugly code in CMakeLists.txt that touched stuff in debian/*
-#   that needs to be re-written
 
 override_dh_auto_build: build-stamp
 
