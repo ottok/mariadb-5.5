@@ -5,3 +5,5 @@ mariadb-test-5.5: embedded-library usr/bin/mysql_client_test: libmysqlclient
 mariadb-test-5.5: embedded-library usr/bin/mysql_client_test_embedded: libmysqlclient
 mariadb-test-5.5: embedded-library usr/bin/mysqltest: libmysqlclient
 mariadb-test-5.5: embedded-library usr/bin/mysqltest_embedded: libmysqlclient
+# OK, file part of test suite
+mariadb-test-5.5: arch-dependent-file-in-usr-share usr/share/mysql/mysql-test/lib/My/SafeProcess/my_safe_process
