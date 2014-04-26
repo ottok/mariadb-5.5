@@ -1,9 +1,12 @@
+# The mysql-server-5.6.postrm script handles
+# what debhelper normally would.
+# This is apparently related to #526464.
 maintainer-script-lacks-debhelper-token debian/mariadb-server-5.5.postrm
-# File is multi-licensed, and thus should be ok for Debian
+# File is multi-licensed, and thus should be OK for Debian
 license-problem-non-free-RFC include/sha1.h
-license-problem-non-free-RFC include/sha1.c
+license-problem-non-free-RFC mysys/sha1.c
 # Autotools is not used, these files are just old cruft from upstream
-outdated-autotools-helper-file extra/jemalloc/config.guess
-outdated-autotools-helper-file extra/jemalloc/config.sub
-outdated-autotools-helper-file storage/tokudb/ft-index/third_party/xz-4.999.9beta/build-aux/config.guess
-outdated-autotools-helper-file storage/tokudb/ft-index/third_party/xz-4.999.9beta/build-aux/config.sub
+outdated-autotools-helper-file extra/jemalloc/config.guess 2012-02-10
+outdated-autotools-helper-file extra/jemalloc/config.sub 2012-02-10
+outdated-autotools-helper-file storage/tokudb/ft-index/third_party/xz-4.999.9beta/build-aux/config.guess 2009-04-27
+outdated-autotools-helper-file storage/tokudb/ft-index/third_party/xz-4.999.9beta/build-aux/config.sub 2009-04-17
