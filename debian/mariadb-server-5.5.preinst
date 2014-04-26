@@ -46,7 +46,7 @@ stop_server() {
 
 ################################ main() ##########################
 
-this_version=5.5
+
 
 # Show warning if old data exists
 if [ -d $DATADIR ]; then
@@ -78,22 +78,22 @@ fi
 show_downgrade_warning=0
 for i in `ls $DATADIR/debian-*.flag 2>/dev/null`; do
   found_version=`echo $i | sed 's/.*debian-\([0-9\.]\+\).flag/\1/'`
-  if dpkg --compare-versions "$this_version" '<<' "$found_version"; then
+  if dpkg --compare-versions "5.5" '<<' "$found_version"; then
     show_downgrade_warning=1
     break;
   fi
 done
 if [ "$show_downgrade_warning" = 1 ]; then
-  db_fset mariadb-server-$this_version/really_downgrade seen false || true
-  db_input medium mariadb-server-$this_version/really_downgrade || true
+  db_fset mariadb-server-5.5/really_downgrade seen false || true
+  db_input medium mariadb-server-5.5/really_downgrade || true
   db_go
-  db_get mariadb-server-$this_version/really_downgrade || true
+  db_get mariadb-server-5.5/really_downgrade || true
   if [ "$RET" = "true" ]; then
     rm -f $DATADIR/debian-*.flag
-    touch $DATADIR/debian-$this_version.flag
+    touch $DATADIR/debian-5.5.flag
   else
-    echo "Aborting downgrade from (at least) $found_version to $this_version." 1>&2
-    echo "If are sure you want to downgrade to $this_version, remove the file" 1>&2
+    echo "Aborting downgrade from (at least) $found_version to 5.5." 1>&2
+    echo "If are sure you want to downgrade to 5.5, remove the file" 1>&2
     echo "$DATADIR/debian-*.flag and try installing again." 1>&2
     db_stop
     exit 1
