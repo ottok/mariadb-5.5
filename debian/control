@@ -1,7 +1,8 @@
 Source: mariadb-5.5
 Section: database
 Priority: optional
-Maintainer: Debian MySQL Maintainers <pkg-mysql-maint@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian MySQL Maintainers <pkg-mysql-maint@lists.alioth.debian.org>
 Uploaders: Otto Kekäläinen <otto@seravo.fi>,
            Clint Byrum <clint@ubuntu.com>,
            James Page <jamespage@debian.org>
