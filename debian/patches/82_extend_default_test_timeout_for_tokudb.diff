@@ -1,4 +1,5 @@
-## DP: TokuDB tests can take very long on slow pbuilder/sbuild chroots, so extend time
+Author: Otto Kekäläinen <otto@seravo.fi>
+Description: Extend timeout as some Debian pbuilder/sbuilder chroots may be very slow to run these
 
 --- old/mysql-test/CMakeLists.txt	2014-02-12 17:55:23.469136898 +0200
 +++ new/mysql-test/CMakeLists.txt	2014-02-12 17:54:07.471406742 +0200
