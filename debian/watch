@@ -1,5 +1,5 @@
 version=3
-opts="uversionmangle=s/-(rc|beta)/$1/" \
+opts=pgpsigurlmangle=s/$/.asc/ uversionmangle=s/-(rc|beta)/$1/ \
    ftp://ftp.osuosl.org/pub/mariadb/mariadb-5.5.([\d\.]*(?:-beta|-rc)?)/source/mariadb-([\d\.]*(?:-beta|-rc)?).tar.gz \
    debian uupdate
 
