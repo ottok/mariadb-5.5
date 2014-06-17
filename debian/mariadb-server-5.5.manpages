@@ -1,3 +1,8 @@
+debian/tmp/usr/share/man/man1/aria_chk.1
+debian/tmp/usr/share/man/man1/aria_dump_log.1
+debian/tmp/usr/share/man/man1/aria_ftdump.1
+debian/tmp/usr/share/man/man1/aria_pack.1
+debian/tmp/usr/share/man/man1/aria_read_log.1
 debian/tmp/usr/share/man/man1/msql2mysql.1
 debian/tmp/usr/share/man/man1/myisamchk.1
 debian/tmp/usr/share/man/man1/myisam_ftdump.1
