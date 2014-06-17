@@ -50,6 +50,9 @@ libmariadbclient.so.18 libmariadbclient18 #MINVER#
  load_defaults@libmariadbclient_18 5.5.36
  make_scrambled_password@libmariadbclient_18 5.5.37
  make_scrambled_password_323@libmariadbclient_18 5.5.37
+ my_charset_bin@libmariadbclient_18 5.5.38
+ my_charset_latin1@libmariadbclient_18 5.5.38
+ my_charset_utf8_general_ci@libmariadbclient_18 5.5.38
  my_end@libmariadbclient_18 5.5.37
  my_free@libmariadbclient_18 5.5.37
  my_init@libmariadbclient_16 5.5.36
@@ -60,6 +63,7 @@ libmariadbclient.so.18 libmariadbclient18 #MINVER#
  my_memdup@libmariadbclient_18 5.5.37
  my_print_help@libmariadbclient_16 5.5.36
  my_print_help@libmariadbclient_18 5.5.36
+ my_progname@libmariadbclient_18 5.5.38
  my_realloc@libmariadbclient_18 5.5.37
  my_strdup@libmariadbclient_18 5.5.37
  myodbc_remove_escape@libmariadbclient_16 5.5.36
