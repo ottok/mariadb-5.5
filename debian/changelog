@@ -2,7 +2,7 @@ mariadb-5.5 (5.5.38-1) unstable; urgency=low
 
   * New upstream release.
   * Added upstream release signing key in preparation for future use
-  * Made libterm-readkey-perl a depends instead of suggest (Closes: LP#1324082)
+  * Made libterm-readkey-perl a depends instead of suggest (LP: #1324082)
   * Add patch to fix HPPA build error (Closes: #751805)
   * Fixed lots and lots of Lintian warnings
 
