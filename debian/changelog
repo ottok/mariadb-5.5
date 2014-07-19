@@ -1,3 +1,9 @@
+mariadb-5.5 (5.5.38-2) unstable; urgency=low
+
+  * Fixed wrongly applied fix of MDEV-5957 (Closes: #752203)
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Sat, 19 Jul 2014 23:43:33 +0300
+
 mariadb-5.5 (5.5.38-1) unstable; urgency=low
 
   * New upstream release.
