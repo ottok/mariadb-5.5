@@ -1,6 +1,12 @@
 mariadb-5.5 (5.5.38-2) unstable; urgency=low
 
   * Fixed wrongly applied fix of MDEV-5957 (Closes: #752203)
+  * Add in retrospect corresponding MariaDB CVEs for Oracle SPU July 2014 (Closes: #754940)
+    - CVE-2014-2494
+    - CVE-2014-4207
+    - CVE-2014-4243
+    - CVE-2014-4258
+    - CVE-2014-4260
 
  -- Otto Kekäläinen <otto@seravo.fi>  Sat, 19 Jul 2014 23:43:33 +0300
 
@@ -20,13 +26,13 @@ mariadb-5.5 (5.5.37-1) unstable; urgency=low
 
   * New upstream release, fixing the following security issues:
     * Corresponding MariaDB CVEs for Oracle SPU April 2014 (Closes: #745330)
-      - CVE-2014-0384 
-      - CVE-2014-2419 
-      - CVE-2014-2430 
-      - CVE-2014-2431 
-      - CVE-2014-2432 
-      - CVE-2014-2436 
-      - CVE-2014-2438 
+      - CVE-2014-0384
+      - CVE-2014-2419
+      - CVE-2014-2430
+      - CVE-2014-2431
+      - CVE-2014-2432
+      - CVE-2014-2436
+      - CVE-2014-2438
       - CVE-2014-2440
   * Re-enabled TokuDB with "if arch amd64" in d/rules
   * Applied patch to log init output better
