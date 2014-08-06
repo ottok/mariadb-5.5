@@ -6,5 +6,3 @@ mariadb-server-5.5: data.tar.xz-member-without-dpkg-pre-depends
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:194 /bin/echo
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:208 /bin/echo
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:216 /bin/echo
-# mysql_plugin is a symlink and does not need its own manpage
-mariadb-server-5.5: binary-without-manpage usr/bin/mysql_plugin

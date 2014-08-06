@@ -1,3 +1,2 @@
-mariadb-common: data.tar.xz-member-without-dpkg-pre-depends
-# OK in neẃer Debian, includes support for xz
+# OK in newer Debian, includes support for xz
 mariadb-common: data.tar.xz-member-without-dpkg-pre-depends

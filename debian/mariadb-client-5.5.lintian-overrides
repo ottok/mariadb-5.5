@@ -6,8 +6,3 @@ mariadb-client-5.5: embedded-library usr/bin/mysqlshow: libmysqlclient
 mariadb-client-5.5: embedded-library usr/bin/mysqlslap: libmysqlclient
 # OK, newer Debian should support xz
 mariadb-client-5.5: data.tar.xz-member-without-dpkg-pre-depends
-# Symlink to mysqlcheck, which does have a manpage
-mariadb-client-5.5: binary-without-manpage usr/bin/innochecksum
-mariadb-client-5.5: binary-without-manpage usr/bin/mysqlanalyze
-mariadb-client-5.5: binary-without-manpage usr/bin/mysqloptimize
-mariadb-client-5.5: binary-without-manpage usr/bin/mysqlrepair

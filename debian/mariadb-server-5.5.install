@@ -39,7 +39,6 @@ usr/lib/mysql/plugin/sql_errlog.so
 usr/share/doc/mariadb-server-5.5/INFO_BIN
 usr/share/doc/mariadb-server-5.5/INFO_SRC
 usr/share/doc/mariadb-server-5.5/mysqld.sym.gz
-usr/share/man/man1/innochecksum.1
 usr/share/man/man1/msql2mysql.1
 usr/share/man/man1/my_print_defaults.1
 usr/share/man/man1/myisam_ftdump.1

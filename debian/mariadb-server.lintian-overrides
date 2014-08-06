@@ -1,2 +1,2 @@
-# OK in neẃer Debian, includes support for xz
+# OK in newer Debian, includes support for xz
 mariadb-server: data.tar.xz-member-without-dpkg-pre-depends

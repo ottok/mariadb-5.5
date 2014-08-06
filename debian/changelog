@@ -1,7 +1,8 @@
 mariadb-5.5 (5.5.38-2) unstable; urgency=low
 
   * Fixed wrongly applied fix of MDEV-5957 (Closes: #752203)
-  * Add in retrospect corresponding MariaDB CVEs for Oracle SPU July 2014 (Closes: #754940)
+  * Add in retrospect corresponding MariaDB CVEs for
+    Oracle SPU July 2014 (Closes: #754940)
     - CVE-2014-2494
     - CVE-2014-4207
     - CVE-2014-4243
