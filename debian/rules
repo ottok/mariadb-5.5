@@ -22,7 +22,7 @@ endif
 #endif
 
 # Disable TokuDB until https://mariadb.atlassian.net/browse/MDEV-6449 gets fixed
-TOKUDB_OPT="-DWITHOUT_TOKUDB=true"
+TOKUDB_OPT = -DWITHOUT_TOKUDB=true
 
 
 export MYSQL_BUILD_CC=$(DEB_HOST_GNU_TYPE)-gcc
@@ -37,6 +37,22 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 DISTRIBUTION := $(shell lsb_release -i -s)
 RELEASE := $(shell lsb_release -r -s)
+
+# Parallel build support as adviced
+# at https://www.debian.org/doc/debian-policy/ch-source.html#s-debianrules-options
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+    NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+    # Placeholder code to implement max cpu count value checking
+    # if [$(NUMJOBS) > $(shell if [ -f /proc/cpuinfo ] ; then grep -c processor.* /proc/cpuinfo ; else echo 1 ; fi)]
+    #  then NUMJOBS = 0
+    # fi
+    MAKEFLAGS += -j $(NUMJOBS)
+endif
+
+# Add support for verbose builds
+ifneq (,$(filter verbose,$(DEB_BUILD_OPTIONS)))
+    MAKEFLAGS += VERBOSE=1
+endif
 
 MAKE_TEST_TARGET:=test-force
 ifneq ($(findstring fulltest,$(DEB_BUILD_OPTIONS)),)
@@ -78,8 +94,6 @@ override_dh_auto_configure: configure-stamp
 override_dh_prep:
         # Don't clean /tmp/ away, it is needed by all binary packages
 
-# We explicitly set -DINSTALL_SUPPORTFILESDIR as it is incorrect in upstream
-# sources (will be fixed in 5.5.30).
 configure-stamp:
 	@echo "RULES.$@"
 	dh_testdir
@@ -101,27 +115,22 @@ configure-stamp:
 	    	CXX=$${MYSQL_BUILD_CXX:-g++} \
 	    	CXXFLAGS=$${MYSQL_BUILD_CXXFLAGS:-"-O3 -DBIG_JOINS=1 -felide-constructors -fno-exceptions -fno-rtti -fno-strict-aliasing ${TAOCRYPT_OPT}"} \
 	    cmake -DCMAKE_INSTALL_PREFIX=/usr \
-		$(USE_STATIC_MYSQLD) \
+	    $(USE_STATIC_MYSQLD) \
+	    $(MAKEFLAGS) \
+	    $(TOKUDB_OPT) \
 	    -DCOMPILATION_COMMENT="($(DISTRIBUTION))" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEBVERSION)" \
-	    -DSYSTEM_TYPE="debian-$(DEB_BUILD_GNU_SYSTEM)" $(TOKUDB_OPT) \
+	    -DSYSTEM_TYPE="debian-$(DEB_BUILD_GNU_SYSTEM)" \
 	    -DBUILD_CONFIG=mysql_release \
 	    -DINSTALL_LIBDIR=lib/$(DEB_HOST_MULTIARCH) \
 	    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
-	    -DINSTALL_SUPPORTFILESDIR=share/mysql \
 		-DDEB=1 ..'
 	touch $@
 
-override_dh_auto_build: build-stamp
-
-build-stamp:
-	@echo "RULES.$@"
-	cd $(builddir) && $(MAKE) $(AM_EXTRA_MAKEFLAGS)
-	touch $@
 
 override_dh_auto_test:
 	@echo "RULES.$@"
-ifeq ($(findstring nocheck,$(DEB_BUILD_OPTIONS)),)
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	cd $(builddir) && $(MAKE) $(MAKE_TEST_TARGET) || $(TESTSUITE_FAIL_CMD) ;
 endif
 
@@ -205,9 +214,6 @@ override_dh_installinit-arch:
 
 override_dh_installcron-arch:
 	dh_installcron --name mysql-server
-
-override_dh_builddeb:
-	dh_builddeb -- -Zxz
 
 binary:	binary-indep binary-arch
 
