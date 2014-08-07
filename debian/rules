@@ -87,14 +87,12 @@ override_dh_auto_clean:
 	dh_testroot
 	[ ! -d mysql-test/var ] || rm -rf mysql-test/var
 	rm -rf $(BUILDDIR)
-	debconf-updatepo
-
-override_dh_auto_configure: configure-stamp
+	debconf-updatepo # Update po-files when clean runs before each build
 
 override_dh_prep:
         # Don't clean /tmp/ away, it is needed by all binary packages
 
-configure-stamp:
+override_dh_auto_configure:
 	@echo "RULES.$@"
 	dh_testdir
 	
@@ -116,7 +114,7 @@ configure-stamp:
 	    	CXXFLAGS=$${MYSQL_BUILD_CXXFLAGS:-"-O3 -DBIG_JOINS=1 -felide-constructors -fno-exceptions -fno-rtti -fno-strict-aliasing ${TAOCRYPT_OPT}"} \
 	    cmake -DCMAKE_INSTALL_PREFIX=/usr \
 	    $(USE_STATIC_MYSQLD) \
-	    $(MAKEFLAGS) \
+	    -$(MAKEFLAGS) \
 	    $(TOKUDB_OPT) \
 	    -DCOMPILATION_COMMENT="($(DISTRIBUTION))" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEBVERSION)" \
@@ -127,6 +125,11 @@ configure-stamp:
 		-DDEB=1 ..'
 	touch $@
 
+# This is needed, otherwise 'make test' will run before binaries have been built
+override_dh_auto_build:
+	@echo "RULES.$@"
+	cd $(builddir) && $(MAKE)
+	touch $@
 
 override_dh_auto_test:
 	@echo "RULES.$@"
@@ -134,9 +137,7 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	cd $(builddir) && $(MAKE) $(MAKE_TEST_TARGET) || $(TESTSUITE_FAIL_CMD) ;
 endif
 
-override_dh_auto_install: auto_install-stamp
-
-auto_install-stamp:
+override_dh_auto_install:
 	@echo "RULES.$@"
 	dh_testdir
 	dh_testroot
@@ -214,11 +215,6 @@ override_dh_installinit-arch:
 
 override_dh_installcron-arch:
 	dh_installcron --name mysql-server
-
-binary:	binary-indep binary-arch
-
-get-orig-source:
-	uscan --force-download --verbose
 
 %:
 	dh $@ --parallel

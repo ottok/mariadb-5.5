@@ -1,6 +1,8 @@
 mariadb-5.5 (5.5.39-1) unstable; urgency=low
 
   * New upstream release.
+    * Fixes an error when handling MyISAM temporary files can be
+      exploited to execute arbitrary code (Secunia Advisory SA60599)
   * Add patch to fix kFreeBSD builds
   * Fixed wrongly applied fix of MDEV-5957 (Closes: #752203)
 
