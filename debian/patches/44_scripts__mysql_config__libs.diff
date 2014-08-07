@@ -3,7 +3,7 @@ Description: Removes unnecessary library dependencies. See #390692
 
 --- old/scripts/mysql_config.sh	2014-04-17 22:07:38.668960760 +0300
 +++ new/scripts/mysql_config.sh	2014-04-17 22:08:33.528958126 +0300
-@@ -106,10 +106,10 @@
+@@ -107,10 +107,10 @@
  
  # Create options 
  # We intentionally add a space to the beginning and end of lib strings, simplifies replace later

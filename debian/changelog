@@ -1,15 +1,9 @@
-mariadb-5.5 (5.5.38-2) unstable; urgency=low
+mariadb-5.5 (5.5.39-1) unstable; urgency=low
 
+  * New upstream release.
   * Fixed wrongly applied fix of MDEV-5957 (Closes: #752203)
-  * Add in retrospect corresponding MariaDB CVEs for
-    Oracle SPU July 2014 (Closes: #754940)
-    - CVE-2014-2494
-    - CVE-2014-4207
-    - CVE-2014-4243
-    - CVE-2014-4258
-    - CVE-2014-4260
 
- -- Otto Kekäläinen <otto@seravo.fi>  Sat, 19 Jul 2014 23:43:33 +0300
+ -- Otto Kekäläinen <otto@seravo.fi>  Thu, 07 Aug 2014 12:16:19 +0300
 
 mariadb-5.5 (5.5.38-1) unstable; urgency=low
 
@@ -20,6 +14,13 @@ mariadb-5.5 (5.5.38-1) unstable; urgency=low
   * Fixed lots and lots of Lintian warnings
   * Disabled TokuDB (Closes: #753222). Remember to re-enable if once
     https://mariadb.atlassian.net/browse/MDEV-6449 is closed.
+  * Add in retrospect corresponding MariaDB CVEs for
+    Oracle SPU July 2014 (Closes: #754940)
+    - CVE-2014-2494
+    - CVE-2014-4207
+    - CVE-2014-4243
+    - CVE-2014-4258
+    - CVE-2014-4260
 
  -- Otto Kekäläinen <otto@seravo.fi>  Tue, 17 Jun 2014 16:24:35 +0300
 

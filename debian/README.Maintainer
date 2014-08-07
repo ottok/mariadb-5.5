@@ -1,5 +1,9 @@
-## Building from sources with git-buildpackage ##
+# README for Debian package maintainers #
 
+This file mostly applies to how the packaging workflow works for the official Debian packages, but it may contain useful information also for anybody doing their own private .deb builds.
+
+
+## Building from sources with git-buildpackage ##
 
 Clone sources with all branches
   sudo apt-get install git-buildpackage
@@ -29,6 +33,11 @@ If the build fails the easiest way to clean up before a new run is
   Buildbot, running the test suite from installed .debs on a clean VM.
 
     export DEB_BUILD_OPTIONS="nocheck"
+
+  If you want to run the build in parallel on 2 CPUs and have verbose output, use:
+    export DEB_BUILD_OPTIONS="parallel=2 verbose"
+
+  The options above can also be combined freely to get required behaviour.
 
 
 ## Importing initial sources from upstream the first fime ##
@@ -76,6 +85,15 @@ Commit and push
 Note that in above if you want to sync to Github directly you need to have collaborator rights to the Github repo and you need to add it as a secondary remote location with:
   git remote add origin git@github.com:ottok/mariadb-5.5.git
 
+
+### Maintaining patches ###
+
+Test that the patches still apply by running:
+  export QUILT_PATCHES=debian/patches
+  quilt import
+  quilt push -a
+
+If there are any rejects, inspect the files and update the patches.
 
 ### Maintaining symbols file for libmariadbclient18 et al ###
 

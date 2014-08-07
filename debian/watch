@@ -5,3 +5,6 @@ opts=pgpsigurlmangle=s/$/.asc/ uversionmangle=s/-(rc|beta)/$1/ \
 
 # Added string "-5.5." in path as MariaDB has release series 5.5 and 10.x in parallel,
 # and we want uscan to check for updates only in the 5-series.
+
+# Automated signature checking with pgpsigurlmangle has been available
+# only since devscripts version 2.13.3
