@@ -146,11 +146,6 @@ override_dh_auto_install:
 	# add it to the server install list.
 	[ ! -f $(BUILDDIR)/usr/lib/mysql/plugin/ha_tokudb.so ] || echo 'usr/lib/mysql/plugin/ha_tokudb.so\netc/mysql/conf.d/tokudb.cnf\nusr/bin/tokuftdump\nusr/share/doc/mariadb-server-5.5/README-TOKUDB\nusr/share/doc/mariadb-server-5.5/README.md' >> debian/mariadb-server-5.5.install
 	
-	# some self written manpages which hopefully
-	# gets overwritten sooner or later with upstreams
-	mkdir -p $(TMP)/usr/share/man/man1/
-	mkdir -p $(TMP)/usr/share/man/man8/
-	cp debian/additions/*.1 $(TMP)/usr/share/man/man1/
 	mkdir -p $(TMP)/etc/mysql/conf.d/
 	cp debian/additions/mysqld_safe_syslog.cnf $(TMP)/etc/mysql/conf.d/
 	
@@ -173,11 +168,6 @@ override_dh_auto_install:
 	# mariadb-common: MariaDB-specific config stuff.
 	install -d $(TMP)/etc/mysql/conf.d
 	install -m 0644 debian/additions/mariadb.cnf $(TMP)/etc/mysql/conf.d/mariadb.cnf
-	
-	# mariadb-client
-	install -m 0755 debian/additions/mysqlreport $(TMP)/usr/bin/
-	install -m 0755 debian/additions/innotop/innotop $(TMP)/usr/bin/
-	install -m 0644 debian/additions/innotop/innotop.1 $(TMP)/usr/share/man/man1/
 	
 	# mariadb-server
 	rm -vf $(TMP)/usr/share/mysql/mi_test_all* \
