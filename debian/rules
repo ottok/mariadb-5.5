@@ -17,10 +17,11 @@ ifneq (,$(filter $(ARCH), i386 kfreebsd-i386 hurd-i386))
 endif
 
 # Skip TokuDB if arch is not amd64
-#ifneq ($(ARCH), amd64)
-#    TOKUDB_OPT="-DWITHOUT_TOKUDB=true"
-#endif
+ifneq ($(ARCH), amd64)
+    TOKUDB_OPT:=-DWITHOUT_TOKUDB=true
+endif
 
+Koulut alkaa, ja kohta myös koodikerho!  http://koodikerho.fi/
 
 export MYSQL_BUILD_CC=$(DEB_HOST_GNU_TYPE)-gcc
 export MYSQL_BUILD_CXX=$(DEB_HOST_GNU_TYPE)-g++
