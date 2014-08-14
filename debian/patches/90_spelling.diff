@@ -1,0 +1,504 @@
+Author: Otto Kekäläinen <otto@seravo.fi>
+Description: Fix spelling of preceding, specified, received, additionally
+
+--- a/include/mysql_com.h
++++ b/include/mysql_com.h
+@@ -110,7 +110,7 @@ enum enum_server_command
+ #define MYSQL_TYPE_VIRTUAL 245
+ /*
+   Length of random string sent by server on handshake; this is also length of
+-  obfuscated password, recieved from client
++  obfuscated password, received from client
+ */
+ #define SCRAMBLE_LENGTH 20
+ #define SCRAMBLE_LENGTH_323 8
+--- a/libmysql/errmsg.c
++++ b/libmysql/errmsg.c
+@@ -81,7 +81,7 @@ const char *client_errors[]=
+   "Attempt to read a row while there is no result set associated with the statement",
+   "This feature is not implemented yet",
+   "Lost connection to MySQL server at '%s', system error: %d",
+-  "Statement closed indirectly because of a preceeding %s() call",
++  "Statement closed indirectly because of a preceding %s() call",
+   "The number of columns in the result set differs from the number of bound buffers. You must reset the statement, rebind the result set columns, and execute the statement again",
+   "This handle is already connected. Use a separate handle for each connection.",
+   "Authentication plugin '%s' cannot be loaded: %s",
+--- a/man/mysql-test-run.pl.1
++++ b/man/mysql-test-run.pl.1
+@@ -332,7 +332,7 @@ is defined so that
+ can invoke itself with
+ exec $MYSQL_TEST\&.
+ .PP
+-Other tests may refer to the last three variables listed in the preceeding table, to locate files to read or write\&. For example, tests that need to create files will typically put them in
++Other tests may refer to the last three variables listed in the preceding table, to locate files to read or write\&. For example, tests that need to create files will typically put them in
+ $MYSQL_TMP_DIR/\fIfile_name\fR\&.
+ .PP
+ If you are running
+--- a/man/mysqldump.1
++++ b/man/mysqldump.1
+@@ -1261,7 +1261,7 @@ to point the slave to the correct master server host\&. Add any such parameters
+ .\" max-allowed-packet option: mysqldump
+ \fB\-\-max\-allowed\-packet=\fR\fB\fIlength\fR\fR
+ .sp
+-Sets the maximum packet length to send to or recieve from server\&.
++Sets the maximum packet length to send to or receive from server\&.
+ .RE
+ .sp
+ .RS 4
+--- a/mysql-test/extra/rpl_tests/rpl_ddl.test
++++ b/mysql-test/extra/rpl_tests/rpl_ddl.test
+@@ -98,8 +98,8 @@
+ #       --> less switching of AUTOCOMMIT mode on master side.
+ #
+ #    4. Never use a test object, which was direct or indirect affected by a
+-#       preceeding test sequence again.
+-#       If one preceeding test sequence hits a (sometimes not visible,
++#       preceding test sequence again.
++#       If one preceding test sequence hits a (sometimes not visible,
+ #       because the sql error code of the statement might be 0) bug
+ #       and these rules are ignored, a following test sequence might earn ugly
+ #       effects like failing 'sync_slave_with_master', crashes of the slave or
+--- a/mysql-test/extra/rpl_tests/rpl_row_basic.test
++++ b/mysql-test/extra/rpl_tests/rpl_row_basic.test
+@@ -221,7 +221,7 @@ INSERT INTO t7 VALUES (1,3), (2,6), (3,9);
+ SELECT * FROM t7 ORDER BY C1;
+ 
+ # since bug#31552/31609 idempotency is not default any longer. In order
+-# the preceeding test INSERT INTO t7 to pass the mode is switched
++# the preceding test INSERT INTO t7 to pass the mode is switched
+ # temprorarily
+ set @@global.slave_exec_mode= 'IDEMPOTENT';
+ 
+@@ -260,7 +260,7 @@ INSERT INTO t8 VALUES (1,2,3), (2,4,6), (3,6,9);
+ SELECT * FROM t8 ORDER BY a;
+ 
+ # since bug#31552/31609 idempotency is not default any longer. In order
+-# the preceeding test INSERT INTO t8 to pass the mode is switched
++# the preceding test INSERT INTO t8 to pass the mode is switched
+ # temprorarily
+ set @@global.slave_exec_mode= 'IDEMPOTENT';
+ 
+--- a/mysql-test/include/wait_until_count_sessions.inc
++++ b/mysql-test/include/wait_until_count_sessions.inc
+@@ -10,7 +10,7 @@
+ #    1. We wait for $current_sessions <= $count_sessions because in the use case
+ #       with count_sessions.inc before and wait_until_count_sessions.inc after
+ #       the core of the test it could happen that the disconnects of sessions
+-#       belonging to the preceeding test are not finished.
++#       belonging to the preceding test are not finished.
+ #       sessions at test begin($count_sessions) =  m + n
+ #       sessions of the previous test which will be soon disconnected = n (n >= 0)
+ #       sessions at test end ($current sessions, assuming the test disconnects
+--- a/mysql-test/mysql-test-run.pl
++++ b/mysql-test/mysql-test-run.pl
+@@ -6484,7 +6484,7 @@ Misc options
+   start-dirty           Only start the servers (without initialization) for
+                         the first specified test case
+   user-args             In combination with start* and no test name, drops
+-                        arguments to mysqld except those speficied with
++                        arguments to mysqld except those specified with
+                         --mysqld (if any)
+   wait-all              If --start or --start-dirty option is used, wait for all
+                         servers to exit before finishing the process
+--- a/mysql-test/r/mysqld--help.result
++++ b/mysql-test/r/mysqld--help.result
+@@ -613,7 +613,7 @@ The following options may be given as the first argument:
+  --relay-log-space-limit=# 
+  Maximum space to use for all relay logs
+  --replicate-annotate-row-events 
+- Tells the slave to write annotate rows events recieved
++ Tells the slave to write annotate rows events received
+  from the master to its own binary log. Ignored if
+  log_slave_updates is not set
+  --replicate-do-db=name 
+--- a/mysql-test/r/ps.result
++++ b/mysql-test/r/ps.result
+@@ -613,8 +613,8 @@ insert into t2 values ("1", "1", "sup", "0"), ("2", "1", "sup", "1"),
+ ("4", "1", "sup", "0");
+ create table t3 (
+ id int(11) not null default '0',
+-preceeding_id int(11) not null default '0',
+-primary key  (id,preceeding_id)
++preceding_id int(11) not null default '0',
++primary key  (id,preceding_id)
+ );
+ create table t4 (
+ user_id varchar(50) not null,
+@@ -625,7 +625,7 @@ insert into t4 values("nicke", "imp");
+ prepare stmt from
+ 'select distinct t1.partner_id
+ from t1 left join t3 on t1.id = t3.id
+-     left join t1 pp on pp.id = t3.preceeding_id
++     left join t1 pp on pp.id = t3.preceding_id
+ where
+   exists (
+     select *
+--- a/mysql-test/r/subselect_sj.result
++++ b/mysql-test/r/subselect_sj.result
+@@ -1007,8 +1007,8 @@ insert into t2 values ("1", "1", "sup", "0"), ("2", "1", "sup", "1"),
+ ("4", "1", "sup", "0");
+ create table t3 (
+ id int(11) not null default '0',
+-preceeding_id int(11) not null default '0',
+-primary key  (id,preceeding_id)
++preceding_id int(11) not null default '0',
++primary key  (id,preceding_id)
+ );
+ create table t4 (
+ user_id varchar(50) not null,
+--- a/mysql-test/r/subselect_sj_jcl6.result
++++ b/mysql-test/r/subselect_sj_jcl6.result
+@@ -1020,8 +1020,8 @@ insert into t2 values ("1", "1", "sup", "0"), ("2", "1", "sup", "1"),
+ ("4", "1", "sup", "0");
+ create table t3 (
+ id int(11) not null default '0',
+-preceeding_id int(11) not null default '0',
+-primary key  (id,preceeding_id)
++preceding_id int(11) not null default '0',
++primary key  (id,preceding_id)
+ );
+ create table t4 (
+ user_id varchar(50) not null,
+--- a/mysql-test/suite/funcs_1/views/func_view.inc
++++ b/mysql-test/suite/funcs_1/views/func_view.inc
+@@ -282,7 +282,7 @@ INSERT INTO t1_values SET
+ #               other interesting value
+ #     numbers   -> 0
+ #     strings, blobs, binaries -> not full length of used data type, "exotic"
+-#                                 characters and preceeding and trailing spaces
++#                                 characters and preceding and trailing spaces
+ #     FIXME enum, set ??
+ INSERT INTO t1_values SET
+        my_char_30 = ' ---äÖüß@µ*$-- ',
+--- a/mysql-test/suite/funcs_1/views/views_master.inc
++++ b/mysql-test/suite/funcs_1/views/views_master.inc
+@@ -545,7 +545,7 @@ let $message= Testcase 3.3.1.7 ;
+ #                   view names are accepted, at creation time, alteration time,
+ #                   and drop time.
+ ###############################################################################
+-# Note(mleich): non-qualified view name means a view name without preceeding
++# Note(mleich): non-qualified view name means a view name without preceding
+ #               database name
+ --disable_warnings
+ DROP VIEW  IF EXISTS v1 ;
+--- a/mysql-test/suite/rpl/t/rpl_ddl.test
++++ b/mysql-test/suite/rpl/t/rpl_ddl.test
+@@ -13,10 +13,10 @@
+ #         sequences start.
+ #
+ #      2. Never use a test object, which was direct or indirect affected by a
+-#         preceeding test sequence again.
++#         preceding test sequence again.
+ #         Except table d1.t1 where ONLY DML is allowed.
+ #
+-#         If one preceeding test sequence hits a (sometimes not good visible,
++#         If one preceding test sequence hits a (sometimes not good visible,
+ #         because the sql error code of the statement might be 0) bug
+ #         and these rules are ignored, a following test sequence might earn ugly
+ #         effects like failing 'sync_slave_with_master', crashes of the slave or
+--- a/mysql-test/suite/rpl/t/rpl_row_basic_11bugs.test
++++ b/mysql-test/suite/rpl/t/rpl_row_basic_11bugs.test
+@@ -244,7 +244,7 @@ sync_slave_with_master;
+ UPDATE t1 SET a = 5, b = 'slave' WHERE a = 1;
+ SELECT * FROM t1 ORDER BY a;
+ # since bug#31552/31609 idempotency is not default any longer. In
+-# order for the preceeding test UPDATE t1 to pass, the mode is switched
++# order for the preceding test UPDATE t1 to pass, the mode is switched
+ # temprorarily
+ set @@global.slave_exec_mode= 'IDEMPOTENT';
+ --echo **** On Master ****
+--- a/mysql-test/t/ps.test
++++ b/mysql-test/t/ps.test
+@@ -677,8 +677,8 @@ insert into t2 values ("1", "1", "sup", "0"), ("2", "1", "sup", "1"),
+ 
+ create table t3 (
+   id int(11) not null default '0',
+-  preceeding_id int(11) not null default '0',
+-  primary key  (id,preceeding_id)
++  preceding_id int(11) not null default '0',
++  primary key  (id,preceding_id)
+ );
+ 
+ create table t4 (
+@@ -692,7 +692,7 @@ insert into t4 values("nicke", "imp");
+ prepare stmt from
+ 'select distinct t1.partner_id
+ from t1 left join t3 on t1.id = t3.id
+-     left join t1 pp on pp.id = t3.preceeding_id
++     left join t1 pp on pp.id = t3.preceding_id
+ where
+   exists (
+     select *
+--- a/mysql-test/t/subselect_sj.test
++++ b/mysql-test/t/subselect_sj.test
+@@ -897,8 +897,8 @@ insert into t2 values ("1", "1", "sup", "0"), ("2", "1", "sup", "1"),
+                       ("4", "1", "sup", "0");
+ create table t3 (
+   id int(11) not null default '0',
+-  preceeding_id int(11) not null default '0',
+-  primary key  (id,preceeding_id)
++  preceding_id int(11) not null default '0',
++  primary key  (id,preceding_id)
+ );
+ 
+ create table t4 (
+--- a/sql/handler.h
++++ b/sql/handler.h
+@@ -1270,7 +1270,7 @@ typedef struct st_ha_create_information
+     For ALTER TABLE defaults to ROW_TYPE_NOT_USED (means "keep the current").
+ 
+     Can be changed either explicitly by the parser.
+-    If nothing speficied inherits the value of the original table (if present).
++    If nothing specified inherits the value of the original table (if present).
+   */
+   enum row_type row_type;
+   uint null_bits;                       /* NULL bits at start of record */
+--- a/sql/log_event.cc
++++ b/sql/log_event.cc
+@@ -3649,7 +3649,7 @@ int Query_log_event::do_apply_event(Relay_log_info const *rli,
+     if ((error= rows_event_stmt_cleanup(const_cast<Relay_log_info*>(rli), thd)))
+     {
+       const_cast<Relay_log_info*>(rli)->report(ERROR_LEVEL, error,
+-                  "Error in cleaning up after an event preceeding the commit; "
++                  "Error in cleaning up after an event preceding the commit; "
+                   "the group log file/position: %s %s",
+                   const_cast<Relay_log_info*>(rli)->group_master_log_name,
+                   llstr(const_cast<Relay_log_info*>(rli)->group_master_log_pos,
+--- a/sql/log_event.h
++++ b/sql/log_event.h
+@@ -1860,7 +1860,7 @@ public:
+   bool is_valid() const { return query != 0; }
+ 
+   /*
+-    Returns number of bytes additionaly written to post header by derived
++    Returns number of bytes additionally written to post header by derived
+     events (so far it is only Execute_load_query event).
+   */
+   virtual ulong get_post_header_size_for_derived() { return 0; }
+--- a/sql/password.c
++++ b/sql/password.c
+@@ -425,7 +425,7 @@ void make_scrambled_password(char *to, const char *password)
+ 
+ /*
+     Produce an obscure octet sequence from password and random
+-    string, recieved from the server. This sequence corresponds to the
++    string, received from the server. This sequence corresponds to the
+     password, but password can not be easily restored from it. The sequence
+     is then sent to the server for validation. Trailing zero is not stored
+     in the buf as it is not needed.
+@@ -467,7 +467,7 @@ scramble(char *to, const char *message, const char *password)
+ 
+ /*
+     Check that scrambled message corresponds to the password; the function
+-    is used by server to check that recieved reply is authentic.
++    is used by server to check that received reply is authentic.
+     This function does not check lengths of given strings: message must be
+     null-terminated, reply and hash_stage2 must be at least SHA1_HASH_SIZE
+     long (if not, something fishy is going on).
+--- a/sql/rpl_utility.cc
++++ b/sql/rpl_utility.cc
+@@ -1157,7 +1157,7 @@ bool Deferred_log_events::execute(Relay_log_info *rli)
+ void Deferred_log_events::rewind()
+ {
+   /*
+-    Reset preceeding Query log event events which execution was
++    Reset preceding Query log event events which execution was
+     deferred because of slave side filtering.
+   */
+   if (!is_empty())
+--- a/sql/slave.cc
++++ b/sql/slave.cc
+@@ -3524,7 +3524,7 @@ pthread_handler_t handle_slave_sql(void *arg)
+   set_thd_in_use_temporary_tables(rli);   // (re)set sql_thd in use for saved temp tables
+   /*
+     binlog_annotate_row_events must be TRUE only after an Annotate_rows event
+-    has been recieved and only till the last corresponding rbr event has been
++    has been received and only till the last corresponding rbr event has been
+     applied. In all other cases it must be FALSE.
+   */
+   thd->variables.binlog_annotate_row_events= 0;
+--- a/sql/sql_connect.cc
++++ b/sql/sql_connect.cc
+@@ -704,7 +704,7 @@ static void update_global_user_stats_with_user(THD *thd,
+   user_stats->cpu_time+=   (thd->status_var.cpu_time -
+                             thd->org_status_var.cpu_time); 
+   /*
+-    This is handle specially as bytes_recieved is incremented BEFORE
++    This is handle specially as bytes_received is incremented BEFORE
+     org_status_var is copied.
+   */
+   user_stats->bytes_received+= (thd->org_status_var.bytes_received-
+--- a/sql/sql_prepare.cc
++++ b/sql/sql_prepare.cc
+@@ -74,7 +74,7 @@ When one supplies long data for a placeholder:
+ 
+   - Server gets the long data in pieces with command type
+     'COM_STMT_SEND_LONG_DATA'.
+-  - The packet recieved will have the format as:
++  - The packet received will have the format as:
+     [COM_STMT_SEND_LONG_DATA:1][STMT_ID:4][parameter_number:2][data]
+   - data from the packet is appended to the long data value buffer for this
+     placeholder.
+--- a/sql/sql_select.cc
++++ b/sql/sql_select.cc
+@@ -20409,7 +20409,7 @@ find_order_in_list(THD *thd, Item **ref_pointer_array, TABLE_LIST *tables,
+     Item *view_ref= NULL;
+     /*
+       If we have found field not by its alias in select list but by its
+-      original field name, we should additionaly check if we have conflict
++      original field name, we should additionally check if we have conflict
+       for this name (in case if we would perform lookup in all tables).
+     */
+     if (resolution == RESOLVED_BEHIND_ALIAS && !order_item->fixed &&
+@@ -21432,7 +21432,7 @@ change_to_use_tmp_fields(THD *thd, Item **ref_pointer_array,
+          We are replacing the argument of Item_func_set_user_var after its value
+          has been read.  The argument's null_value should be set by now, so we
+          must set it explicitly for the replacement argument since the null_value
+-         may be read without any preceeding call to val_*().
++         may be read without any preceding call to val_*().
+         */
+         new_field->update_null_value();
+         List<Item> list;
+--- a/sql/sys_vars.cc
++++ b/sql/sys_vars.cc
+@@ -3816,7 +3816,7 @@ static Sys_var_mybool Sys_binlog_annotate_row_events(
+ #ifdef HAVE_REPLICATION
+ static Sys_var_mybool Sys_replicate_annotate_row_events(
+        "replicate_annotate_row_events",
+-       "Tells the slave to write annotate rows events recieved from the master "
++       "Tells the slave to write annotate rows events received from the master "
+        "to its own binary log. Ignored if log_slave_updates is not set",
+        READ_ONLY GLOBAL_VAR(opt_replicate_annotate_row_events),
+        CMD_LINE(OPT_ARG), DEFAULT(0));
+--- a/sql/tztime.cc
++++ b/sql/tztime.cc
+@@ -2032,7 +2032,7 @@ tz_load_from_open_tables(const String *tz_name, TABLE_LIST *tz_tables)
+ 
+   /*
+     At last we are doing the same thing for records in
+-    mysql.time_zone_transition table. Here we additionaly need records
++    mysql.time_zone_transition table. Here we additionally need records
+     in ascending order by index scan also satisfies us.
+   */
+   table= tz_tables->table; 
+--- a/storage/maria/ma_rnext.c
++++ b/storage/maria/ma_rnext.c
+@@ -71,7 +71,7 @@ int maria_rnext(MARIA_HA *info, uchar *buf, int inx)
+       Normally SQL layer would never request "search next" if
+       "search first" failed. But HANDLER may do anything.
+ 
+-      As mi_rnext() without preceeding mi_rkey()/mi_rfirst()
++      As mi_rnext() without preceding mi_rkey()/mi_rfirst()
+       equals to mi_rfirst(), we must restore original state
+       as if failing mi_rfirst() was not called.
+     */
+--- a/storage/myisam/mi_rnext.c
++++ b/storage/myisam/mi_rnext.c
+@@ -66,7 +66,7 @@ int mi_rnext(MI_INFO *info, uchar *buf, int inx)
+       Normally SQL layer would never request "search next" if
+       "search first" failed. But HANDLER may do anything.
+ 
+-      As mi_rnext() without preceeding mi_rkey()/mi_rfirst()
++      As mi_rnext() without preceding mi_rkey()/mi_rfirst()
+       equals to mi_rfirst(), we must restore original state
+       as if failing mi_rfirst() was not called.
+     */
+--- a/storage/ndb/include/ndbapi/NdbEventOperation.hpp
++++ b/storage/ndb/include/ndbapi/NdbEventOperation.hpp
+@@ -63,7 +63,7 @@ class NdbEventOperationImpl;
+  * - Event code does not check table schema version. Make sure to drop events
+  * after table is dropped. Will be fixed in later
+  * versions.
+- * - If a node failure has occured not all events will be recieved
++ * - If a node failure has occured not all events will be received
+  * anymore. Drop NdbEventOperation and Create again after nodes are up
+  * again. Will be fixed in later versions.
+  *
+--- a/storage/ndb/src/cw/cpcc-win32/csharp/telnetclient/telnetClient.cs
++++ b/storage/ndb/src/cw/cpcc-win32/csharp/telnetclient/telnetClient.cs
+@@ -163,7 +163,7 @@ namespace NDB_CPC.telnetclient
+ 				}
+ 				else
+ 				{
+-					// If no data was recieved then the connection is probably dead
++					// If no data was received then the connection is probably dead
+ 					Console.WriteLine( "Disconnected", sock.RemoteEndPoint );
+ 					sock.Shutdown( SocketShutdown.Both );
+ 					sock.Close();
+--- a/storage/ndb/src/kernel/blocks/dbtc/DbtcMain.cpp
++++ b/storage/ndb/src/kernel/blocks/dbtc/DbtcMain.cpp
+@@ -10559,7 +10559,7 @@ void Dbtc::releaseAbortResources(Signal* signal)
+ 
+   // MASV let state be CS_ABORTING until all 
+   // signals in the "air" have been received. Reset to CS_CONNECTED
+-  // will be done when a TCKEYREQ with start flag is recieved
++  // will be done when a TCKEYREQ with start flag is received
+   // or releaseApiCon is called
+   // apiConnectptr.p->apiConnectstate = CS_CONNECTED;
+   apiConnectptr.p->apiConnectstate = CS_ABORTING;
+--- a/storage/ndb/src/mgmsrv/MgmtSrvr.hpp
++++ b/storage/ndb/src/mgmsrv/MgmtSrvr.hpp
+@@ -526,7 +526,7 @@ private:
+   //  we signal with a condition variable to the waiting
+   //  thread (receiveOptimisedResponse) that the signal has arrived.
+   // Parameters:
+-  //  signal: The recieved signal
++  //  signal: The received signal
+   // Returns: -
+   //**************************************************************************
+ 
+--- a/storage/ndb/test/ndbapi/testDict.cpp
++++ b/storage/ndb/test/ndbapi/testDict.cpp
+@@ -942,7 +942,7 @@ int runStoreFrm(NDBT_Context* ctx, NDBT_Step* step){
+     
+     // Verfiy the frm data
+     if (memcmp(pData, pData2, resultLen) != 0){
+-      g_err << "Wrong data recieved" << endl;
++      g_err << "Wrong data received" << endl;
+       for (size_t i = 0; i < dataLen; i++){
+ 	unsigned char c = ((unsigned char*)pData2)[i];
+ 	g_err << hex << c << ", ";
+--- a/storage/ndb/test/odbc/client/SQLColAttributeTest.cpp
++++ b/storage/ndb/test/odbc/client/SQLColAttributeTest.cpp
+@@ -42,7 +42,7 @@ void ColAtt_DisplayError(SQLSMALLINT ColAtt_HandleType,
+  * Test returning descriptor information
+  *
+  * Tests:
+- * -# Call SQLColAttribute, without preceeding SQLPrepare
++ * -# Call SQLColAttribute, without preceding SQLPrepare
+  * -# ???
+  * 
+  * @return Zero, if test succeeded
+--- a/storage/ndb/test/odbc/client/SQLColAttributeTest2.cpp
++++ b/storage/ndb/test/odbc/client/SQLColAttributeTest2.cpp
+@@ -42,7 +42,7 @@ void ColAtt_DisplayErrorTest2(SQLSMALLINT ColAttTest2_HandleType,
+  * Test returning descriptor information
+  *
+  * Test:
+- * -# Call SQLColAttribute without preceeding SQLExecute
++ * -# Call SQLColAttribute without preceding SQLExecute
+  * -# Let TYPE is 'ITEM' in Table 20, FieldIdentifer is zero
+  * -# Let TYPE is 'ITEM' in Table 20, ColumnNumber is less than one
+  * -# FieldIdentifer is not one of the code valuess in Table 20
+--- a/storage/tokudb/ft-index/ft/ft-flusher.cc
++++ b/storage/tokudb/ft-index/ft/ft-flusher.cc
+@@ -1024,7 +1024,7 @@ ft_nonleaf_split(
+             B->bp[targchild] = node->bp[i];
+             memset(&node->bp[i], 0, sizeof(node->bp[0]));
+ 
+-            // Delete a child, removing the preceeding pivot key.  The child number must be > 0
++            // Delete a child, removing the preceding pivot key.  The child number must be > 0
+             {
+                 paranoid_invariant(i>0);
+                 if (i>n_children_in_a) {
+--- a/storage/xtradb/fil/fil0fil.c
++++ b/storage/xtradb/fil/fil0fil.c
+@@ -3946,7 +3946,7 @@ func_exit:
+ 		page_no = dict_index_get_page(index);
+ 		ut_a(page_no == 3);
+ 
+-		fprintf(stderr, "InnoDB: It is compressed .ibd file. need to convert additionaly on buffer pool.\n");
++		fprintf(stderr, "InnoDB: It is compressed .ibd file. need to convert additionally on buffer pool.\n");
+ 
+ 		/* down to leaf */
+ 		mtr_start(&mtr);
