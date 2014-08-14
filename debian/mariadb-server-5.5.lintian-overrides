@@ -1,7 +1,5 @@
 # Embedded from same source is OK
 mariadb-server-5.5: embedded-library usr/bin/mysqlbinlog: libmysqlclient
-# OK in neẃer Debian, includes support for xz
-mariadb-server-5.5: data.tar.xz-member-without-dpkg-pre-depends
 # ash's buildin has no "-e" so use /bin/echo
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:194 /bin/echo
 mariadb-server-5.5: command-with-path-in-maintainer-script postinst:208 /bin/echo

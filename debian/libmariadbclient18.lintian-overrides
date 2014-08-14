@@ -3,6 +3,3 @@ libmariadbclient18: arch-dependent-file-not-in-arch-specific-directory usr/lib/m
 libmariadbclient18: arch-dependent-file-not-in-arch-specific-directory usr/lib/mysql/plugin/mysql_clear_password.so
 # embedded libs are OK
 libmariadbclient18: embedded-library usr/lib/x86_64-linux-gnu/libmariadbclient.so.18.0.0: libmysqlclient
-libmariadbclient18: embedded-library usr/lib/i386-linux-gnu/libmariadbclient.so.18.0.0: libmysqlclient
-# OK, newer Debian should support xz
-libmariadbclient18: data.tar.xz-member-without-dpkg-pre-depends
