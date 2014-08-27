@@ -1,3 +1,10 @@
+mariadb-5.5 (5.5.39-2) unstable; urgency=low
+
+  * d/control: Removed Provides: libmysqlclient-dev (Closes: #759309)
+  * d/control: Removed Provides: libmysqld-dev with same motivation
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Wed, 27 Aug 2014 21:12:36 +0300
+
 mariadb-5.5 (5.5.39-1) unstable; urgency=low
 
   * New upstream release.
