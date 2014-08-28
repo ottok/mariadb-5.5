@@ -1,6 +1,6 @@
 # These are OK for -dev package
 libmariadbd-dev: package-name-doesnt-match-sonames libmysqld18
-# OK to have embedded from same source
+# OK, embedded has same source
 libmariadbd-dev: embedded-library usr/lib/x86_64-linux-gnu/libmysqld.so.18: libmysqlclient
 libmariadbd-dev: embedded-library usr/lib/i386-linux-gnu/libmysqld.so.18: libmysqlclient
 # OK, this is in fact a dev package

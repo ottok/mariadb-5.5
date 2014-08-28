@@ -167,3 +167,10 @@ Arch Linux:
   * https://projects.archlinux.org/svntogit/packages.git/?h=packages/mariadb
 Mageia:
   * http://svnweb.mageia.org/packages/cauldron/mariadb/current/
+
+## Notes about hard to fix bugs ##
+
+The following issues at https://qa.debian.org/bls/packages/m/mariadb-5.5.html are due to a bug in GCC which has been reported to GCC and will become fixed eventually:
+  E array-bounds /??PKGBUILDDIR??/strings/decimal.c:300 (arm64, armel, armhf, i386, mips, mipsel, powerpc, ppc64el, sparc)
+  E array-bounds /??PKGBUILDDIR??/strings/decimal.c:496 (arm64, armel, armhf, i386, mips, mipsel, powerpc, ppc64el, sparc)
+

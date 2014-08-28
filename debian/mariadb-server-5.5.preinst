@@ -46,8 +46,6 @@ stop_server() {
 
 ################################ main() ##########################
 
-
-
 # Show warning if old data exists
 if [ -d $DATADIR ]; then
   db_input high mariadb-server/oneway_migration || true
