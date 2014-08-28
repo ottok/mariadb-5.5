@@ -91,7 +91,7 @@ Description: Fix spelling of preceding, specified, received, additionally
  #       sessions at test end ($current sessions, assuming the test disconnects
 --- a/mysql-test/mysql-test-run.pl
 +++ b/mysql-test/mysql-test-run.pl
-@@ -6484,7 +6484,7 @@ Misc options
+@@ -6489,7 +6489,7 @@ Misc options
    start-dirty           Only start the servers (without initialization) for
                          the first specified test case
    user-args             In combination with start* and no test name, drops
