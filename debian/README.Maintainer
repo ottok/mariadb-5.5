@@ -64,6 +64,15 @@ Eventually commit and push, build, test binaries, test packages etc..
 
 ## Upgrading sources from upstream ##
 
+Upstream will publish maintenance releases at least 5 years after the major version release, and security updates are likely to come even after that as long as major distributions ship the version.
+
+See table at https://mariadb.com/kb/en/mariadb/development/mariadb-maintenance-policy/
+
+Release notes are available at https://mariadb.com/kb/en/mariadb/development/release-notes/
+
+
+### Steps to import new upstream version ###
+
 Download new source package
   cd pkg-mariadb-5.5
   uscan --verbose
@@ -84,6 +93,8 @@ Commit and push
 
 Note that in above if you want to sync to Github directly you need to have collaborator rights to the Github repo and you need to add it as a secondary remote location with:
   git remote add origin git@github.com:ottok/mariadb-5.5.git
+
+To push to the git.debian.org repos you need to a member of the pkg-mysql team at Alioth. It does not matter which repository you push to, eventually they are synced with each other anyway.
 
 
 ### Maintaining patches ###
@@ -108,6 +119,8 @@ Finish it manually by e.g. making sure there are no '-1' file versions, upstream
 
 
 ### Maintaining debian/copyright ###
+
+First install packages: license-reconcile devscripts cdbs
 
 Check if licenses match
   license-reconcile
@@ -140,3 +153,17 @@ These are good to have as environment variables (replace values with your own)
 The run the commands to automatically change version and upload
   backportpackage -u ppa:mysql-ubuntu/mariadb -d precise -r *.dsc -S ~ppa1 -y
 
+
+## Comparison to other distributions ##
+
+For tracking security release information, finding solutions for build errors on many architechtures and for general quality control it can be useful to keep an eye on what packagers in other distributions do:
+
+Fedora:
+  * https://apps.fedoraproject.org/packages/mariadb/
+  * http://pkgs.fedoraproject.org/cgit/mariadb.git/
+OpenSUSE:
+  * https://build.opensuse.org/package/show/server:database/mariadb
+Arch Linux:
+  * https://projects.archlinux.org/svntogit/packages.git/?h=packages/mariadb
+Mageia:
+  * http://svnweb.mageia.org/packages/cauldron/mariadb/current/
