@@ -92,6 +92,13 @@ override_dh_auto_configure:
 	@echo "RULES.$@"
 	dh_testdir
 	
+	# Versioned symbols are only available on Linux.
+	# Remove symbols file on kFreeBSD builds so that
+	# dpkg-gensymbols will not fail the build.
+ifneq (,$(filter $(ARCH), kfreebsd-i386 kfreebsd-amd64))
+	rm debian/libmariadbclient18.symbols
+endif
+	
 	# Rename shared libraries SONAME and filenames
 	# libmysqlclient18.so > libmariadbclient18.so etc
 	sed -i 's/mysqlclient/mariadbclient/g' client/CMakeLists.txt tests/CMakeLists.txt scripts/CMakeLists.txt
