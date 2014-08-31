@@ -153,6 +153,13 @@ These are good to have as environment variables (replace values with your own)
 The run the commands to automatically change version and upload
   backportpackage -u ppa:mysql-ubuntu/mariadb -d precise -r *.dsc -S ~ppa1 -y
 
+## Uploading to Ubuntu security releases ##
+
+See examples with documented procedures:
+ * https://bugs.launchpad.net/ubuntu/+source/mariadb-5.5/+bug/1313187
+ * https://bugs.launchpad.net/ubuntu/+source/mariadb-5.5/+bug/1363222
+
+Probably the most optimal workflow would be to create a git branch (e.g. ubuntu-14.04) with custom gbp.conf and maintaining it by importing upstream in one commit, and updating changelog and other stuff, including refreshing patches in another commits, so that it would be easy to produce a patch file that Ubuntu security team can apply upon the mix of previous debian/ contents from Ubuntu archive and updated others from upstream. This would allow to use git-buildpackage to produce test builds instead of plain 'fakeroot dpkg-buildpackage'.
 
 ## Comparison to other distributions ##
 
