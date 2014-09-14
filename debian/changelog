@@ -5,6 +5,7 @@ mariadb-5.5 (5.5.39-2) unstable; urgency=low
   * Re-introduced tha HPPA build patch as the upstream fix wasn't complete
   * Fixed all kFreeBSD build and test suite issues
   * Added Italian translation (Closes: #759813)
+  * Set migration option as unseen if installation was aborted (Closes: #761452)
 
  -- Otto Kekäläinen <otto@seravo.fi>  Wed, 27 Aug 2014 21:12:36 +0300
 
