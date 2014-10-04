@@ -1,3 +1,9 @@
+mariadb-5.5 (5.5.39-3) UNRELEASED; urgency=low
+
+  * Updated Dutch translation by Frans Spiesschaert (Closes: #764010)
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Sat, 04 Oct 2014 22:45:02 +0300
+
 mariadb-5.5 (5.5.39-2) unstable; urgency=low
 
   * d/control: Removed Provides: libmysqlclient-dev (Closes: #759309)
