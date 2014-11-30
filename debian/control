@@ -125,8 +125,16 @@ Depends: debianutils (>=1.6),
          ${shlibs:Depends}
 Recommends: libdbd-mysql-perl (>= 1.2202)
 Conflicts: mysql-client-core-5.5, mysql-client-core-5.6
-Breaks: mysql-client, mysql-client-5.5, mysql-client-5.6, virtual-mysql-client
-Replaces: mysql-client, mysql-client-5.5, mysql-client-5.6, virtual-mysql-client
+Breaks: mariadb-server-5.5 (<< ${source:Version}),
+        mysql-client,
+        mysql-client-5.5,
+        mysql-client-5.6,
+        virtual-mysql-client
+Replaces: mariadb-server-5.5 (<< ${source:Version}),
+          mysql-client,
+          mysql-client-5.5,
+          mysql-client-5.6,
+          virtual-mysql-client
 Provides: virtual-mysql-client
 Description: MariaDB database client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database

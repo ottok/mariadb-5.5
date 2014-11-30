@@ -1,6 +1,10 @@
 mariadb-5.5 (5.5.39-3) UNRELEASED; urgency=low
 
   * Updated Dutch translation by Frans Spiesschaert (Closes: #764010)
+  * Updated control file so that mariadb-client-5.5 breaks and replaces
+    the package mariadb-server-5.5 to allow overwriting the innochecksum
+    man page file which has changed location (LP: #1368124) as per
+    doc https://www.debian.org/doc/debian-policy/ch-relationships.html#s7.6.1
 
  -- Otto Kekäläinen <otto@seravo.fi>  Sat, 04 Oct 2014 22:45:02 +0300
 
