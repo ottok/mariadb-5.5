@@ -5,6 +5,8 @@ mariadb-5.5 (5.5.39-3) UNRELEASED; urgency=low
     the package mariadb-server-5.5 to allow overwriting the innochecksum
     man page file which has changed location (LP: #1368124) as per
     doc https://www.debian.org/doc/debian-policy/ch-relationships.html#s7.6.1
+  * Backported the fix of #770177 from 10.0 to 5.5 so that the migration
+    question will not be asked repeatedly.
 
  -- Otto Kekäläinen <otto@seravo.fi>  Sat, 04 Oct 2014 22:45:02 +0300
 

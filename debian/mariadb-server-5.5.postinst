@@ -134,6 +134,8 @@ EOF
     # data directory and then somewhen gets purged by the admin.
     db_set mysql-server/postrm_remove_database false || true
 
+    # Clean up old flags before setting new one
+    rm $mysql_statedir/debian-*.flag
     # To avoid downgrades.
     touch $mysql_statedir/debian-5.5.flag
 
@@ -146,7 +148,7 @@ EOF
     set +e
     bash /usr/bin/mysql_install_db --rpm --user=mysql 2>&1 | $ERR_LOGGER
     set -e
-    
+
     ## On every reconfiguration the maintenance user is recreated.
     #
     # - It is easier to regenerate the password every time but as people
