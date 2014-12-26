@@ -82,13 +82,6 @@ script, too.
 	user		= your-mysql-username
 	password	= enter-your-good-new-password-here
 
-* BIG_ROWS FOR EVEN MORE ROWS IN A TABLE:
-=========================================
-If you ever run out of rows in a table there is the possibility of building
-the package with "-DBIG_ROWS" which, according to a MySQL employee on
-packagers@lists.mysql.com should lead to a 64bit row index (I guess > 2^32
-rows) but also to an approx. 5% performance loss.
-
 * BerkeleyDB Storage Engine
 ===========================
 Support for BerkeleyDB has been removed in 5.1, and consequently both the
