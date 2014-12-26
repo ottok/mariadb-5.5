@@ -11,7 +11,8 @@ debian.cnf file contains the right password, e.g. by setting a new one
 * WHAT TO DO AFTER UPGRADES:
 ============================
 The privilege tables are automatically updated so all there is left is read
-the changelogs on dev.mysql.com to see if any changes affect custom apps.
+the release notes on https://mariadb.com/kb/en/release-notes/ to see if any
+changes affect custom apps.
 
 * WHAT TO DO AFTER INSTALLATION:
 ================================
@@ -54,9 +55,7 @@ hosts_access(5).
 
 * WHERE IS THE DOCUMENTATION?:
 ==============================
-Unfortunately due to licensing restrictions, debian currently not able
-to provide the mysql-doc package in any format.  For the most up to date
-documentation, please go to http://dev.mysql.com/doc.
+https://mariadb.com/kb
 
 * PASSWORDS:
 ============
