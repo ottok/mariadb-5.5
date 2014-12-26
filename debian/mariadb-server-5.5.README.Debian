@@ -48,8 +48,7 @@ tries to connect updated to libmysqlclient14 or -15.
 For security reasons, the Debian package has enabled networking only on the
 loop-back device using "bind-address" in /etc/mysql/my.cnf.  Check with
 "netstat -tlnp" where it is listening. If your connection is aborted
-immediately see if "mysqld: all" or similar is in /etc/hosts.allow and read
-hosts_access(5).
+immediately check your firewall rules or network routes.
 
 * WHERE IS THE DOCUMENTATION?:
 ==============================
