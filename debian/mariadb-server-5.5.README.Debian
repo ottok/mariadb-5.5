@@ -68,7 +68,7 @@ scripts you can store it in the file $HOME/.my.cnf. It should be chmod 0600
 (-rw------- username username .my.cnf) to ensure that nobody else can read
 it.  Every other configuration parameter can be stored there, too. You will
 find an example below and more information in the MySQL manual in
-/usr/share/doc/mariadb-doc or www.mysql.com.
+/usr/share/doc/mariadb-doc, https://mariadb.com/kb or dev.mysql.com.
 
 ATTENTION: It is necessary, that a .my.cnf from root always contains a "user"
 line wherever there is a "password" line, else, the Debian maintenance
