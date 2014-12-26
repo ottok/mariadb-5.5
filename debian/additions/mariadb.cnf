@@ -15,3 +15,10 @@
 #collation-server      = utf8_general_ci 
 #character_set_server   = utf8 
 #collation_server       = utf8_general_ci 
+
+# Needed so the root database user can authenticate without a password but
+# only when running as the unix root user.
+#
+# Also available for other users if required.
+# See https://mariadb.com/kb/en/unix_socket-authentication-plugin/
+plugin-load-add         = auth_socket.so

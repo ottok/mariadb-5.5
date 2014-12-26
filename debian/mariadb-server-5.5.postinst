@@ -21,7 +21,7 @@ invoke() {
   fi
 }
 
-MYSQL_BOOTSTRAP="/usr/sbin/mysqld --bootstrap --user=mysql --skip-grant-tables --loose-innodb=OFF --default-storage-engine=myisam"
+MYSQL_BOOTSTRAP="/usr/sbin/mysqld --bootstrap --user=mysql --skip-grant-tables --loose-innodb=OFF --default-storage-engine=myisam --plugin-load-add=auth_socket"
 
 test_mysql_access() {
        mysql --no-defaults -u root -h localhost </dev/null >/dev/null 2>&1
@@ -40,12 +40,11 @@ set_mysql_rootpw() {
        # this avoids us having to call "test" or "[" on $rootpw
        cat << EOF > $tfile
 USE mysql;
-UPDATE user SET password=PASSWORD("$rootpw") WHERE user='root';
+SET sql_log_bin=0;
+UPDATE user SET password="", plugin="unix_socket" WHERE user='root';
 FLUSH PRIVILEGES;
 EOF
-       if grep -q 'PASSWORD("")' $tfile; then
-               retval=0
-       elif [ "$1" = "online" ]; then
+       if [ "$1" = "online" ]; then
                mysql --no-defaults -u root -h localhost <$tfile >/dev/null
                retval=$?
        else
@@ -166,26 +165,30 @@ EOF
     #   As the binlog cron scripts to need at least the Super_priv, I do first
     #   the old query which always succeeds and then the new which may or may not.
 
-    # recreate the credentials file if not present or without mysql_upgrade stanza
+    # recreate the credentials file if not present or with debian-sys-maint
+    # still there
     dc=$mysql_cfgdir/debian.cnf;
-    if [ -e "$dc" -a -n "`fgrep mysql_upgrade $dc 2>/dev/null`" ]; then
-        pass="`sed -n 's/^[     ]*password *= *// p' $dc | head -n 1`"
-    else
-	pass=`perl -e 'print map{("a".."z","A".."Z",0..9)[int(rand(62))]}(1..16)'`;
+    if [ ! -e "$dc" -o -n "`fgrep debian-sys-maint $dc 2>/dev/null`" ]; then
         if [ ! -d "$mysql_cfgdir" ]; then install -o 0 -g 0 -m 0755 -d $mysql_cfgdir; fi
+        if [ -e "$dc" ]; then
+          oldconf=`mktemp --tmpdir $mysql_cfgdir -t debian_old_config.XXXXXX`
+          cp $dc $oldconf
+        else
+          oldconf=''
+        fi
         umask 066
         cat /dev/null > $dc
         umask 022
         echo "# Automatically generated for Debian scripts. DO NOT TOUCH!" >>$dc
         echo "[client]"                                                    >>$dc
         echo "host     = localhost"                                        >>$dc
-        echo "user     = debian-sys-maint"                                 >>$dc
-        echo "password = $pass"                                            >>$dc
+        echo "user     = root"                                             >>$dc
+        echo "password = "                                                 >>$dc
         echo "socket   = $mysql_rundir/mysqld.sock"                        >>$dc
         echo "[mysql_upgrade]"                                             >>$dc
         echo "host     = localhost"                                        >>$dc
-        echo "user     = debian-sys-maint"                                 >>$dc
-        echo "password = $pass"                                            >>$dc
+        echo "user     = root"                                             >>$dc
+        echo "password = "                                                 >>$dc
         echo "socket   = $mysql_rundir/mysqld.sock"                        >>$dc
         echo "basedir  = /usr"                                             >>$dc
     fi
@@ -196,42 +199,43 @@ EOF
     # update privilege tables
     password_column_fix_query=`/bin/echo -e \
         "USE mysql;\n" \
+        "SET sql_log_bin=0;\n" \
         "ALTER TABLE user CHANGE Password Password char(41) character set latin1 collate latin1_bin DEFAULT '' NOT NULL;"`
-    replace_query=`/bin/echo -e \
-        "USE mysql;\n" \
-        "SET sql_mode='';\n" \
-        "REPLACE INTO user SET " \
-        "  host='localhost', user='debian-sys-maint', password=password('$pass'), " \
-        "  Select_priv='Y', Insert_priv='Y', Update_priv='Y', Delete_priv='Y', " \
-        "  Create_priv='Y', Drop_priv='Y', Reload_priv='Y', Shutdown_priv='Y', " \
-        "  Process_priv='Y',  File_priv='Y', Grant_priv='Y', References_priv='Y', " \
-        "  Index_priv='Y', Alter_priv='Y', Super_priv='Y', Show_db_priv='Y', "\
-        "  Create_tmp_table_priv='Y', Lock_tables_priv='Y', Execute_priv='Y', "\
-        "  Repl_slave_priv='Y', Repl_client_priv='Y', Create_view_priv='Y', "\
-        "  Show_view_priv='Y', Create_routine_priv='Y', Alter_routine_priv='Y', "\
-        "  Create_user_priv='Y', Event_priv='Y', Trigger_priv='Y',"\
-        "  ssl_cipher='', x509_issuer='', x509_subject='';"`;
+
+    replace_query="USE mysql; SET sql_mode='', sql_log_bin=0; DROP USER 'debian-sys-maint'@'localhost';"
+
     # Engines supported by etch should be installed per default. The query sequence is supposed
     # to be aborted if the CREATE TABLE fails due to an already existent table in which case the
     # admin might already have chosen to remove one or more plugins. Newlines are necessary.
     install_plugins=`/bin/echo -e \
         "USE mysql;\n" \
+        "SET sql_log_bin=0;\n" \
         "CREATE TABLE IF NOT EXISTS plugin (name char(64) COLLATE utf8_bin NOT NULL DEFAULT '', " \
         "  dl char(128) COLLATE utf8_bin NOT NULL DEFAULT '', " \
         "  PRIMARY KEY (name)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='MySQL plugins';" `
 
     # Upgrade password column format before the root password gets set.
     echo "$password_column_fix_query"                        | $MYSQL_BOOTSTRAP 2>&1 | $ERR_LOGGER
+    # install unix_socket plugin but ignore if already there
+    set +e
+    echo "$install_plugins"                                  | $MYSQL_BOOTSTRAP 2>&1 | $ERR_LOGGER
+    set -e
+    # overly complicated here but ensures a plugin unix_socket is installed and is idpotent if already installed
+    echo "SET sql_log_bin=0; USE mysql; DELIMITER //; CREATE PROCEDURE debian_plugin_install(IN plugin_name CHAR(50), IN soname CHAR(50)) BEGIN DECLARE CONTINUE HANDLER FOR NOT FOUND  EXECUTE inst_plug; set @plugin_name=plugin_name; set @soname=soname ;set @install_plugin=CONCAT(\"INSTALL PLUGIN \",@plugin_name,\" SONAME '\", @soname, \"'\");PREPARE inst_plug FROM @install_plugin ; select PLUGIN_NAME INTO @a from  information_schema.plugins where PLUGIN_NAME=@plugin_name AND PLUGIN_STATUS='ACTIVE' AND PLUGIN_TYPE='AUTHENTICATION' AND PLUGIN_LIBRARY LIKE concat(@soname,'%'); DEALLOCATE PREPARE inst_plug; END// CALL debian_plugin_install('unix_socket', 'auth_socket') // DROP PROCEDURE debian_plugin_install//" | $MYSQL_BOOTSTRAP 2>&1 | $ERR_LOGGER
 
     db_get mysql-server/root_password && rootpw="$RET"
     if ! set_mysql_rootpw; then
         password_error="yes"
+        # restore old config file if exists
+        [ -e $oldconf ] && mv $oldconf $dc
+    else
+        [ -e $oldconf ] && rm -f $oldconf
+        # purge debian-sys-maint user
+        set +e
+        echo "$replace_query"                                    | $MYSQL_BOOTSTRAP 2>&1 | $ERR_LOGGER
+        set -e
     fi
 
-    set +e
-    echo "$replace_query"                                    | $MYSQL_BOOTSTRAP 2>&1 | $ERR_LOGGER
-    echo "$install_plugins"                                  | $MYSQL_BOOTSTRAP 2>&1 | $ERR_LOGGER
-    set -e
   ;;
 
   abort-upgrade|abort-remove|abort-configure)

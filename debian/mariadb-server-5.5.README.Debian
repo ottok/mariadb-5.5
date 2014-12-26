@@ -1,12 +1,13 @@
 * MYSQL WON'T START OR STOP?:
 =============================
-You may never ever delete the special mysql user "debian-sys-maint". This
-user together with the credentials in /etc/mysql/debian.cnf are used by the
-init scripts to stop the server as they would require knowledge of the mysql
-root users password else.
-So in most of the times you can fix the situation by making sure that the
-debian.cnf file contains the right password, e.g. by setting a new one
-(remember to do a "flush privileges" then).
+You may never ever delete the mysql user "root". Although it has no password
+is set, the unix_auth plugin ensure that it can only be run locally as the root
+user. The credentials in /etc/mysql/debian.cnf specify the user are used by the
+init scripts to stop the server and perform logrotation. So in most of the
+time you can fix the situation by making sure that the /etc/mysql/debian.cnf
+file specifies the root user and no password.
+
+This used to be the debian-sys-maint user which is no longer used.
 
 * WHAT TO DO AFTER UPGRADES:
 ============================
@@ -60,23 +61,38 @@ documentation, please go to http://dev.mysql.com/doc.
 
 * PASSWORDS:
 ============
-It is strongly recommended to set a password for the mysql root user (which
-  /usr/bin/mysql -u root -D mysql -e "update user set password=password('new-password') where user='root'"
-  /usr/bin/mysql -u root -e "flush privileges"
-If you already had a password set add "-p" before "-u" to the lines above.
+It is strongly recommended you create an admin users for your database
+adminstration needs.
 
+If your your local unix account is the one you want to have local super user
+access on your database with you can create the following account that will
+only work for the local unix user connecting to the database locally.
 
-If you are tired to type the password in every time or want to automate your
-scripts you can store it in the file $HOME/.my.cnf. It should be chmod 0600
-(-rw------- username username .my.cnf) to ensure that nobody else can read
-it.  Every other configuration parameter can be stored there, too. You will
-find an example below and more information in the MySQL manual in
-/usr/share/doc/mariadb-doc or www.mysql.com.
+  sudo /usr/bin/mysql -e "GRANT ALL ON *.* TO '$USER'@'localhost' IDENTIFIED VIA unix_socket WITH GRANT OPTION"
 
-ATTENTION: It is necessary, that a .my.cnf from root always contains a "user"
+To create a local machine account username=USERNAME with a password:
+
+  sudo /usr/bin/mysql -e "GRANT ALL ON *.* TO 'USERNAME'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION"
+
+To create a USERNAME user with password 'password' admin user that can access
+the DB server over the network:
+
+  sudo /usr/bin/mysql -e "GRANT ALL ON *.* TO 'USERNAME'@'%' IDENTIFIED BY 'password' WITH GRANT OPTION"
+
+Scripts should run as a user have have the required grants and be identified via unix_socket.
+
+If you are too tired to type the password in every time and unix_socket auth
+doesn't suit your needs, you can store it in the file $HOME/.my.cnf. It should
+be chmod 0600 (-rw------- username username .my.cnf) to ensure that nobody else
+can read it.  Every other configuration parameter can be stored there, too.
+
+For more information in the MariaDB manual in/usr/share/doc/mariadb-doc or 
+https://mariadb.com/kb/en/configuring-mariadb-with-mycnf/.
+
+ATTENTION: It is necessary, that a ~/.my.cnf from root always contains a "user"
 line wherever there is a "password" line, else, the Debian maintenance
 scripts, that use /etc/mysql/debian.cnf, will use the username
-"debian-sys-maint" but the password that is in root's .my.cnf. Also note,
+"root" but the password that is in root's .my.cnf. Also note,
 that every change you make in the /root/.my.cnf will affect the mysql cron
 script, too.
 
