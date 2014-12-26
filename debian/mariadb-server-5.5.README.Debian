@@ -25,17 +25,15 @@ The only thing that is left over for the admin is
  - creating new users and databases
  - read the rest of this text
 
-* DOWNGRADING TO 4.0 or 4.1:
+* DOWNGRADING
 ============================
 Unsupported. Period.
-But if you do and get problems or make interesting experiences, mail me, it
-might help others.
-Ok, if you really want, I would recommend to "mysqldump --opt" all tables,
-then purge 4.1, delete /var/lib/mysql, install 4.0 and insert the dumps.  Be
-carefully, though, with the "mysql" table, you might not simply overwrite that
-one as the password for the mysql "debian-sys-maint" user is stored in
-/etc/mysql/debian.cnf and needed by /etc/init.d/ to start mysql and check if
-it's alive. 
+
+You might get lucky downgrading a few minor versions without issued. Take a
+backup first. If you break it you get to keep both pieces.
+
+If doing a major version downgrade, take a mysqldump using the current version
+and reload after downgrading and purging existing databases.
 
 * SOME APPLICATION CAN NO LONGER CONNECT:
 =========================================
