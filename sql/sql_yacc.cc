@@ -27155,7 +27155,7 @@ yyreduce:
   case 1096:
 
 /* Line 1455 of yacc.c  */
-#line 7730 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7729 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.simple_string)= (char*) YYLIP->get_cpp_tok_start();
           }
@@ -27359,7 +27359,7 @@ yyreduce:
   case 1111:
 
 /* Line 1455 of yacc.c  */
-#line 7864 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7863 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= negate_expression(thd, (yyvsp[(2) - (2)].item));
             if ((yyval.item) == NULL)
@@ -27370,7 +27370,7 @@ yyreduce:
   case 1112:
 
 /* Line 1455 of yacc.c  */
-#line 7870 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7869 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_istrue((yyvsp[(1) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27381,7 +27381,7 @@ yyreduce:
   case 1113:
 
 /* Line 1455 of yacc.c  */
-#line 7876 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7875 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_isnottrue((yyvsp[(1) - (4)].item));
             if ((yyval.item) == NULL)
@@ -27392,7 +27392,7 @@ yyreduce:
   case 1114:
 
 /* Line 1455 of yacc.c  */
-#line 7882 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7881 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_isfalse((yyvsp[(1) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27403,7 +27403,7 @@ yyreduce:
   case 1115:
 
 /* Line 1455 of yacc.c  */
-#line 7888 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7887 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_isnotfalse((yyvsp[(1) - (4)].item));
             if ((yyval.item) == NULL)
@@ -27414,7 +27414,7 @@ yyreduce:
   case 1116:
 
 /* Line 1455 of yacc.c  */
-#line 7894 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7893 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_isnull((yyvsp[(1) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27436,7 +27436,7 @@ yyreduce:
   case 1119:
 
 /* Line 1455 of yacc.c  */
-#line 7910 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7909 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_isnull((yyvsp[(1) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27447,7 +27447,7 @@ yyreduce:
   case 1120:
 
 /* Line 1455 of yacc.c  */
-#line 7916 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7915 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_isnotnull((yyvsp[(1) - (4)].item));
             if ((yyval.item) == NULL)
@@ -27458,7 +27458,7 @@ yyreduce:
   case 1121:
 
 /* Line 1455 of yacc.c  */
-#line 7922 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7921 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_equal((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27469,7 +27469,7 @@ yyreduce:
   case 1122:
 
 /* Line 1455 of yacc.c  */
-#line 7928 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7927 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= (*(yyvsp[(2) - (3)].boolfunc2creator))(0)->create((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27491,7 +27491,7 @@ yyreduce:
   case 1125:
 
 /* Line 1455 of yacc.c  */
-#line 7944 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 7943 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_in_subselect((yyvsp[(1) - (5)].item), (yyvsp[(4) - (5)].select_lex));
             if ((yyval.item) == NULL)
@@ -27657,7 +27657,7 @@ yyreduce:
   case 1139:
 
 /* Line 1455 of yacc.c  */
-#line 8049 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8048 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_bit_or((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27668,7 +27668,7 @@ yyreduce:
   case 1140:
 
 /* Line 1455 of yacc.c  */
-#line 8055 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8054 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_bit_and((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27679,7 +27679,7 @@ yyreduce:
   case 1141:
 
 /* Line 1455 of yacc.c  */
-#line 8061 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8060 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_shift_left((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27690,7 +27690,7 @@ yyreduce:
   case 1142:
 
 /* Line 1455 of yacc.c  */
-#line 8067 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8066 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_shift_right((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27701,7 +27701,7 @@ yyreduce:
   case 1143:
 
 /* Line 1455 of yacc.c  */
-#line 8073 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8072 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_plus((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27712,7 +27712,7 @@ yyreduce:
   case 1144:
 
 /* Line 1455 of yacc.c  */
-#line 8079 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8078 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_minus((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27723,7 +27723,7 @@ yyreduce:
   case 1145:
 
 /* Line 1455 of yacc.c  */
-#line 8085 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8084 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_date_add_interval((yyvsp[(1) - (5)].item),(yyvsp[(4) - (5)].item),(yyvsp[(5) - (5)].interval),0);
             if ((yyval.item) == NULL)
@@ -27734,7 +27734,7 @@ yyreduce:
   case 1146:
 
 /* Line 1455 of yacc.c  */
-#line 8091 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8090 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_date_add_interval((yyvsp[(1) - (5)].item),(yyvsp[(4) - (5)].item),(yyvsp[(5) - (5)].interval),1);
             if ((yyval.item) == NULL)
@@ -27745,7 +27745,7 @@ yyreduce:
   case 1147:
 
 /* Line 1455 of yacc.c  */
-#line 8097 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8096 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_mul((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27756,7 +27756,7 @@ yyreduce:
   case 1148:
 
 /* Line 1455 of yacc.c  */
-#line 8103 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8102 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_div((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -27767,7 +27767,7 @@ yyreduce:
   case 1149:
 
 /* Line 1455 of yacc.c  */
-#line 8109 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8108 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_mod((yyvsp[(1) - (3)].item),(yyvsp[(3) - (3)].item));
             if ((yyval.item) == NULL)
@@ -28422,7 +28422,7 @@ yyreduce:
   case 1225:
 
 /* Line 1455 of yacc.c  */
-#line 8525 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8524 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_left((yyvsp[(3) - (6)].item),(yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28433,7 +28433,7 @@ yyreduce:
   case 1226:
 
 /* Line 1455 of yacc.c  */
-#line 8531 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8530 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_minute((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -28444,7 +28444,7 @@ yyreduce:
   case 1227:
 
 /* Line 1455 of yacc.c  */
-#line 8537 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8536 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_month((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -28455,7 +28455,7 @@ yyreduce:
   case 1228:
 
 /* Line 1455 of yacc.c  */
-#line 8543 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8542 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_right((yyvsp[(3) - (6)].item),(yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28466,7 +28466,7 @@ yyreduce:
   case 1229:
 
 /* Line 1455 of yacc.c  */
-#line 8549 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8548 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_second((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -28477,7 +28477,7 @@ yyreduce:
   case 1230:
 
 /* Line 1455 of yacc.c  */
-#line 8555 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8554 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_time_typecast((yyvsp[(3) - (4)].item), AUTO_SEC_PART_DIGITS);
             if ((yyval.item) == NULL)
@@ -28488,7 +28488,7 @@ yyreduce:
   case 1231:
 
 /* Line 1455 of yacc.c  */
-#line 8561 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8560 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_datetime_typecast((yyvsp[(3) - (4)].item), AUTO_SEC_PART_DIGITS);
             if ((yyval.item) == NULL)
@@ -28499,7 +28499,7 @@ yyreduce:
   case 1232:
 
 /* Line 1455 of yacc.c  */
-#line 8567 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8566 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_add_time((yyvsp[(3) - (6)].item), (yyvsp[(5) - (6)].item), 1, 0);
             if ((yyval.item) == NULL)
@@ -28510,7 +28510,7 @@ yyreduce:
   case 1233:
 
 /* Line 1455 of yacc.c  */
-#line 8573 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8572 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_trim((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -28521,7 +28521,7 @@ yyreduce:
   case 1234:
 
 /* Line 1455 of yacc.c  */
-#line 8579 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8578 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_ltrim((yyvsp[(6) - (7)].item),(yyvsp[(4) - (7)].item));
             if ((yyval.item) == NULL)
@@ -28532,7 +28532,7 @@ yyreduce:
   case 1235:
 
 /* Line 1455 of yacc.c  */
-#line 8585 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8584 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_rtrim((yyvsp[(6) - (7)].item),(yyvsp[(4) - (7)].item));
             if ((yyval.item) == NULL)
@@ -28543,7 +28543,7 @@ yyreduce:
   case 1236:
 
 /* Line 1455 of yacc.c  */
-#line 8591 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8590 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_trim((yyvsp[(6) - (7)].item),(yyvsp[(4) - (7)].item));
             if ((yyval.item) == NULL)
@@ -28554,7 +28554,7 @@ yyreduce:
   case 1237:
 
 /* Line 1455 of yacc.c  */
-#line 8597 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8596 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_ltrim((yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28565,7 +28565,7 @@ yyreduce:
   case 1238:
 
 /* Line 1455 of yacc.c  */
-#line 8603 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8602 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_rtrim((yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28576,7 +28576,7 @@ yyreduce:
   case 1239:
 
 /* Line 1455 of yacc.c  */
-#line 8609 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8608 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_trim((yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28587,7 +28587,7 @@ yyreduce:
   case 1240:
 
 /* Line 1455 of yacc.c  */
-#line 8615 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8614 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_trim((yyvsp[(5) - (6)].item),(yyvsp[(3) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28634,7 +28634,7 @@ yyreduce:
   case 1244:
 
 /* Line 1455 of yacc.c  */
-#line 8657 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8656 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_date_add_interval((yyvsp[(3) - (8)].item), (yyvsp[(6) - (8)].item), (yyvsp[(7) - (8)].interval), 0);
             if ((yyval.item) == NULL)
@@ -28680,7 +28680,7 @@ yyreduce:
   case 1248:
 
 /* Line 1455 of yacc.c  */
-#line 8685 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8684 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_date_add_interval((yyvsp[(3) - (8)].item),(yyvsp[(6) - (8)].item),(yyvsp[(7) - (8)].interval),1);
             if ((yyval.item) == NULL)
@@ -28691,7 +28691,7 @@ yyreduce:
   case 1249:
 
 /* Line 1455 of yacc.c  */
-#line 8691 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8690 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)=new (thd->mem_root) Item_extract( (yyvsp[(3) - (6)].interval), (yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28702,7 +28702,7 @@ yyreduce:
   case 1250:
 
 /* Line 1455 of yacc.c  */
-#line 8697 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8696 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_get_format((yyvsp[(3) - (6)].date_time_type), (yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28725,7 +28725,7 @@ yyreduce:
   case 1252:
 
 /* Line 1455 of yacc.c  */
-#line 8710 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8709 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item) = new (thd->mem_root) Item_func_locate((yyvsp[(5) - (6)].item),(yyvsp[(3) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28748,7 +28748,7 @@ yyreduce:
   case 1254:
 
 /* Line 1455 of yacc.c  */
-#line 8723 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8722 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_date_add_interval((yyvsp[(3) - (8)].item), (yyvsp[(6) - (8)].item), (yyvsp[(7) - (8)].interval), 1);
             if ((yyval.item) == NULL)
@@ -28759,7 +28759,7 @@ yyreduce:
   case 1255:
 
 /* Line 1455 of yacc.c  */
-#line 8729 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8728 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_substr((yyvsp[(3) - (8)].item),(yyvsp[(5) - (8)].item),(yyvsp[(7) - (8)].item));
             if ((yyval.item) == NULL)
@@ -28770,7 +28770,7 @@ yyreduce:
   case 1256:
 
 /* Line 1455 of yacc.c  */
-#line 8735 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8734 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_substr((yyvsp[(3) - (6)].item),(yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28781,7 +28781,7 @@ yyreduce:
   case 1257:
 
 /* Line 1455 of yacc.c  */
-#line 8741 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8740 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_substr((yyvsp[(3) - (8)].item),(yyvsp[(5) - (8)].item),(yyvsp[(7) - (8)].item));
             if ((yyval.item) == NULL)
@@ -28792,7 +28792,7 @@ yyreduce:
   case 1258:
 
 /* Line 1455 of yacc.c  */
-#line 8747 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8746 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_substr((yyvsp[(3) - (6)].item),(yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -28826,7 +28826,7 @@ yyreduce:
   case 1260:
 
 /* Line 1455 of yacc.c  */
-#line 8771 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8770 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_date_add_interval((yyvsp[(7) - (8)].item),(yyvsp[(5) - (8)].item),(yyvsp[(3) - (8)].interval_time_st),0);
             if ((yyval.item) == NULL)
@@ -28837,7 +28837,7 @@ yyreduce:
   case 1261:
 
 /* Line 1455 of yacc.c  */
-#line 8777 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8776 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_timestamp_diff((yyvsp[(5) - (8)].item),(yyvsp[(7) - (8)].item),(yyvsp[(3) - (8)].interval_time_st));
             if ((yyval.item) == NULL)
@@ -28953,7 +28953,7 @@ yyreduce:
   case 1271:
 
 /* Line 1455 of yacc.c  */
-#line 8857 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8856 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_ascii((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -28964,7 +28964,7 @@ yyreduce:
   case 1272:
 
 /* Line 1455 of yacc.c  */
-#line 8863 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8862 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_charset((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -28975,7 +28975,7 @@ yyreduce:
   case 1273:
 
 /* Line 1455 of yacc.c  */
-#line 8869 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8868 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_coalesce(* (yyvsp[(3) - (4)].item_list));
             if ((yyval.item) == NULL)
@@ -28986,7 +28986,7 @@ yyreduce:
   case 1274:
 
 /* Line 1455 of yacc.c  */
-#line 8875 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8874 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_collation((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -29009,7 +29009,7 @@ yyreduce:
   case 1276:
 
 /* Line 1455 of yacc.c  */
-#line 8888 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8887 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_if((yyvsp[(3) - (8)].item),(yyvsp[(5) - (8)].item),(yyvsp[(7) - (8)].item));
             if ((yyval.item) == NULL)
@@ -29020,7 +29020,7 @@ yyreduce:
   case 1277:
 
 /* Line 1455 of yacc.c  */
-#line 8894 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8893 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_last_value(* (yyvsp[(3) - (4)].item_list));
             if ((yyval.item) == NULL)
@@ -29031,7 +29031,7 @@ yyreduce:
   case 1278:
 
 /* Line 1455 of yacc.c  */
-#line 8900 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8899 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_func_microsecond((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -29042,7 +29042,7 @@ yyreduce:
   case 1279:
 
 /* Line 1455 of yacc.c  */
-#line 8906 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8905 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item) = new (thd->mem_root) Item_func_mod((yyvsp[(3) - (6)].item), (yyvsp[(5) - (6)].item));
             if ((yyval.item) == NULL)
@@ -29053,7 +29053,7 @@ yyreduce:
   case 1280:
 
 /* Line 1455 of yacc.c  */
-#line 8912 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 8911 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)=  new (thd->mem_root) Item_func_old_password((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -29586,7 +29586,7 @@ yyreduce:
   case 1320:
 
 /* Line 1455 of yacc.c  */
-#line 9275 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9274 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_count(* (yyvsp[(5) - (7)].item_list));
             if ((yyval.item) == NULL)
@@ -29608,7 +29608,7 @@ yyreduce:
   case 1322:
 
 /* Line 1455 of yacc.c  */
-#line 9292 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9291 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_min((yyvsp[(4) - (5)].item));
             if ((yyval.item) == NULL)
@@ -29619,7 +29619,7 @@ yyreduce:
   case 1323:
 
 /* Line 1455 of yacc.c  */
-#line 9298 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9297 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_max((yyvsp[(3) - (4)].item));
             if ((yyval.item) == NULL)
@@ -29630,7 +29630,7 @@ yyreduce:
   case 1324:
 
 /* Line 1455 of yacc.c  */
-#line 9304 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9303 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_max((yyvsp[(4) - (5)].item));
             if ((yyval.item) == NULL)
@@ -29641,7 +29641,7 @@ yyreduce:
   case 1325:
 
 /* Line 1455 of yacc.c  */
-#line 9310 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9309 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_std((yyvsp[(3) - (4)].item), 0);
             if ((yyval.item) == NULL)
@@ -29652,7 +29652,7 @@ yyreduce:
   case 1326:
 
 /* Line 1455 of yacc.c  */
-#line 9316 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9315 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_variance((yyvsp[(3) - (4)].item), 0);
             if ((yyval.item) == NULL)
@@ -29663,7 +29663,7 @@ yyreduce:
   case 1327:
 
 /* Line 1455 of yacc.c  */
-#line 9322 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9321 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_std((yyvsp[(3) - (4)].item), 1);
             if ((yyval.item) == NULL)
@@ -29674,7 +29674,7 @@ yyreduce:
   case 1328:
 
 /* Line 1455 of yacc.c  */
-#line 9328 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9327 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_variance((yyvsp[(3) - (4)].item), 1);
             if ((yyval.item) == NULL)
@@ -29685,7 +29685,7 @@ yyreduce:
   case 1329:
 
 /* Line 1455 of yacc.c  */
-#line 9334 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
+#line 9333 "/home/buildbot/bzr/build/sql/sql_yacc.yy"
     {
             (yyval.item)= new (thd->mem_root) Item_sum_sum((yyvsp[(3) - (4)].item), FALSE);
             if ((yyval.item) == NULL)

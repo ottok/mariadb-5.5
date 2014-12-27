@@ -533,9 +533,6 @@ bool ha_tokudb::inplace_alter_table(TABLE *altered_table, Alter_inplace_info *ha
     if (error == 0 && ctx->optimize_needed) {
         error = do_optimize(ha_thd());
     }
-    if (error == 0 && ctx->optimize_needed) {
-        error = do_optimize(ha_thd());
-    }
 
 #if (50600 <= MYSQL_VERSION_ID && MYSQL_VERSION_ID <= 50699) || \
     (50700 <= MYSQL_VERSION_ID && MYSQL_VERSION_ID <= 50799)

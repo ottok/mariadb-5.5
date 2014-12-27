@@ -853,11 +853,6 @@ void toku_ftnode_clone_callback(
         // messages to the fresh tree - ft verify code complains otherwise.
         toku_move_ftnode_messages_to_stale(ft, node);
     }
-    if (node->height > 0) {
-        // need to move messages here so that we don't serialize stale
-        // messages to the fresh tree - ft verify code complains otherwise.
-        toku_move_ftnode_messages_to_stale(ft, node);
-    }
     // clone partition
     toku_ftnode_clone_partitions(node, cloned_node);
 
@@ -1047,8 +1042,6 @@ void toku_ftnode_pe_est_callback(
 exit:
     return;
 }
-
-static void ft_bnc_move_messages_to_stale(FT ft, NONLEAF_CHILDINFO bnc);
 
 // replace the child buffer with a compressed version of itself.
 static void compress_internal_node_partition(FTNODE node, int i, enum toku_compression_method compression_method) {

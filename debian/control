@@ -12,6 +12,7 @@ Build-Depends: bison,
                dh-apparmor,
                hardening-wrapper,
                libaio-dev [linux-any],
+               libjemalloc-dev (>= 3.0.0),
                libjemalloc-dev [linux-any],
                libncurses5-dev (>= 5.0-6),
                libpam0g-dev,
@@ -22,8 +23,7 @@ Build-Depends: bison,
                perl,
                po-debconf,
                psmisc,
-               zlib1g-dev (>= 1:1.1.3-5),
-               libjemalloc-dev (>= 3.0.0)
+               zlib1g-dev (>= 1:1.1.3-5)
 Standards-Version: 3.9.5
 Homepage: http://mariadb.org/
 Vcs-Git: git://git.debian.org/git/pkg-mysql/mariadb-5.5.git
