@@ -2801,10 +2801,6 @@ int prepare_create_field(Create_field *sql_field,
                           (sql_field->decimals << FIELDFLAG_DEC_SHIFT));
     break;
   }
-  if (sql_field->flags & NOT_NULL_FLAG)
-    DBUG_PRINT("info", ("1"));
-  if (sql_field->vcol_info)
-    DBUG_PRINT("info", ("2"));
   if (!(sql_field->flags & NOT_NULL_FLAG) ||
       (sql_field->vcol_info))  /* Make virtual columns allow NULL values */
     sql_field->pack_flag|= FIELDFLAG_MAYBE_NULL;
@@ -6248,6 +6244,18 @@ bool mysql_alter_table(THD *thd,char *new_db, char *new_name,
     my_error(ER_ROW_IS_REFERENCED, MYF(0));
     goto err;
   }
+
+  /*
+   If foreign key is added then check permission to access parent table.
+
+   In function "check_fk_parent_table_access", create_info->db_type is used
+   to identify whether engine supports FK constraint or not. Since
+   create_info->db_type is set here, check to parent table access is delayed
+   till this point for the alter operation.
+  */
+  if ((alter_info->flags & ALTER_FOREIGN_KEY) &&
+      check_fk_parent_table_access(thd, create_info, alter_info))
+    goto err;
 
   /*
     If this is an ALTER TABLE and no explicit row type specified reuse

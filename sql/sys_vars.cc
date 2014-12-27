@@ -1772,7 +1772,8 @@ static Sys_var_ulong Sys_thread_concurrency(
        "the desired number of threads that should be run at the same time."
        "This variable has no effect, and is deprecated. "
        "It will be removed in a future release.",
-       READ_ONLY GLOBAL_VAR(concurrency), CMD_LINE(REQUIRED_ARG),
+       READ_ONLY GLOBAL_VAR(concurrency),
+       CMD_LINE(REQUIRED_ARG, OPT_THREAD_CONCURRENCY),
        VALID_RANGE(1, 512), DEFAULT(DEFAULT_CONCURRENCY), BLOCK_SIZE(1),
        NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
        DEPRECATED(""));
@@ -2649,13 +2650,13 @@ static Sys_var_bit Sys_log_off(
 static bool fix_sql_log_bin_after_update(sys_var *self, THD *thd,
                                          enum_var_type type)
 {
-  if (type == OPT_SESSION)
-  {
-    if (thd->variables.sql_log_bin)
-      thd->variables.option_bits |= OPTION_BIN_LOG;
-    else
-      thd->variables.option_bits &= ~OPTION_BIN_LOG;
-  }
+  DBUG_ASSERT(type == OPT_SESSION);
+
+  if (thd->variables.sql_log_bin)
+    thd->variables.option_bits |= OPTION_BIN_LOG;
+  else
+    thd->variables.option_bits &= ~OPTION_BIN_LOG;
+
   return FALSE;
 }
 
@@ -2677,7 +2678,10 @@ static bool check_sql_log_bin(sys_var *self, THD *thd, set_var *var)
     return TRUE;
 
   if (var->type == OPT_GLOBAL)
-    return FALSE;
+  {
+    my_error(ER_INCORRECT_GLOBAL_LOCAL_VAR, MYF(0), self->name.str, "SESSION");
+    return TRUE;
+  }
 
   if (error_if_in_trans_or_substatement(thd,
           ER_STORED_FUNCTION_PREVENTS_SWITCH_SQL_LOG_BIN,
@@ -2688,9 +2692,9 @@ static bool check_sql_log_bin(sys_var *self, THD *thd, set_var *var)
 }
 
 static Sys_var_mybool Sys_log_binlog(
-       "sql_log_bin", "sql_log_bin",
-       SESSION_VAR(sql_log_bin), NO_CMD_LINE,
-       DEFAULT(TRUE), NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(check_sql_log_bin),
+       "sql_log_bin", "Controls whether logging to the binary log is done",
+       SESSION_VAR(sql_log_bin), NO_CMD_LINE, DEFAULT(TRUE),
+       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(check_sql_log_bin),
        ON_UPDATE(fix_sql_log_bin_after_update));
 
 static Sys_var_bit Sys_sql_warnings(

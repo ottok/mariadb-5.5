@@ -1,6 +1,6 @@
 /*****************************************************************************
 
-Copyright (c) 1996, 2013, Oracle and/or its affiliates. All Rights Reserved.
+Copyright (c) 1996, 2014, Oracle and/or its affiliates. All Rights Reserved.
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -39,6 +39,7 @@ Created 1/8/1996 Heikki Tuuri
 #include "ut0rnd.h"
 #include "ut0byte.h"
 #include "trx0types.h"
+#include "ut0rbt.h"
 
 #ifndef UNIV_HOTBACKUP
 # include "sync0sync.h"
@@ -1122,7 +1123,13 @@ dict_index_calc_min_rec_len(
 /*========================*/
 	const dict_index_t*	index);	/*!< in: index */
 
-/** Calculate new statistics if 1 / 16 of table has been modified
+/**
+
+If user has provided upper bound for how many rows needs to be updated
+before we calculate new statistics we use minimum of provided value
+and 1/16 of table every 16th round. If no upper bound is provided
+(srv_stats_modified_counter = 0, default) then calculate new statistics
+if 1 / 16 of table has been modified
 since the last time a statistics batch was run.
 We calculate statistics at most every 16th round, since we may have
 a counter table which is very small and updated very often.
@@ -1131,7 +1138,9 @@ a counter table which is very small and updated very often.
 recalculated
 */
 #define DICT_TABLE_CHANGED_TOO_MUCH(t) \
-	((ib_int64_t) (t)->stat_modified_counter > 16 + (t)->stat_n_rows / 16)
+	((ib_int64_t) (t)->stat_modified_counter > (srv_stats_modified_counter ? \
+	ut_min(srv_stats_modified_counter, (16 + (t)->stat_n_rows / 16)) : \
+		16 + (t)->stat_n_rows / 16))
 
 /*********************************************************************//**
 Calculates new estimates for table and index statistics. The statistics
@@ -1354,6 +1363,42 @@ dict_table_set_corrupt_by_space(
 /*============================*/
 	ulint	space_id,
 	ibool	need_mutex);
+
+/**********************************************************************//**
+Compares the given foreign key identifier (the key in rb-tree) and the
+foreign key identifier in the given fk object (value in rb-tree).
+@return	negative, 0, or positive if foreign_id is smaller, equal,
+or greater than foreign_obj->id, respectively. */
+UNIV_INLINE
+int
+dict_foreign_rbt_cmp(
+/*=================*/
+	const void*	foreign_id,	/*!< in: the foreign key identifier
+					which is used as a key in rb-tree.  */
+	const void*	foreign_obj);	/*!< in: the foreign object itself
+					which is used as value in rb-tree. */
+
+/**********************************************************************//**
+Allocate the table->foreign_rbt, which stores all the foreign objects
+that is available in table->foreign_list.
+@return the allocated rbt object */
+UNIV_INLINE
+ib_rbt_t*
+dict_table_init_foreign_rbt(
+/*========================*/
+	dict_table_t*	table);	/*!< in: the table object whose
+				table->foreign_rbt will be initialized */
+
+/**********************************************************************//**
+Allocate the table->referened_rbt, which stores all the foreign objects
+that is available in table->referenced_list.
+@return the allocated rbt object */
+UNIV_INLINE
+ib_rbt_t*
+dict_table_init_referenced_rbt(
+/*===========================*/
+	dict_table_t*	table);	/*!< in: the table object whose
+				table->referenced_rbt will be initialized */
 
 #ifndef UNIV_NONINL
 #include "dict0dict.ic"

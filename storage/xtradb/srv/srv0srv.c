@@ -411,6 +411,13 @@ UNIV_INTERN ibool	srv_use_sys_stats_table = FALSE;
 #ifdef UNIV_DEBUG
 UNIV_INTERN ulong	srv_sys_stats_root_page = 0;
 #endif
+/* The number of rows modified before we calculate new statistics (default 0
+= current limits) */
+UNIV_INTERN unsigned long long srv_stats_modified_counter = 0;
+
+/* Enable traditional statistic calculation based on number of configured
+pages default true. */
+UNIV_INTERN my_bool	srv_stats_sample_traditional = TRUE;
 
 UNIV_INTERN ibool	srv_use_doublewrite_buf	= TRUE;
 UNIV_INTERN ibool       srv_use_atomic_writes = FALSE;
@@ -440,7 +447,12 @@ UNIV_INTERN ulong	srv_pass_corrupt_table = 0; /* 0:disable 1:enable */
 
 UNIV_INTERN ulint	srv_dict_size_limit = 0;
 /*-------------------------------------------*/
+#ifdef HAVE_MEMORY_BARRIER
+/* No idea to wait long with memory barriers */
+UNIV_INTERN ulong	srv_n_spin_wait_rounds	= 15;
+#else
 UNIV_INTERN ulong	srv_n_spin_wait_rounds	= 30;
+#endif
 UNIV_INTERN ulong	srv_n_free_tickets_to_enter = 500;
 UNIV_INTERN ulong	srv_thread_sleep_delay = 10000;
 UNIV_INTERN ulong	srv_spin_wait_delay	= 6;
@@ -2929,9 +2941,10 @@ loop:
 	/* Try to track a strange bug reported by Harald Fuchs and others,
 	where the lsn seems to decrease at times */
 
-	new_lsn = log_get_lsn();
+        /* We have to use nowait to ensure we don't block */
+	new_lsn= log_get_lsn_nowait();
 
-	if (new_lsn < old_lsn) {
+	if (new_lsn && new_lsn < old_lsn) {
 		ut_print_timestamp(stderr);
 		fprintf(stderr,
 			"  InnoDB: Error: old log sequence number %llu"
@@ -2943,7 +2956,8 @@ loop:
 		ut_ad(0);
 	}
 
-	old_lsn = new_lsn;
+        if (new_lsn)
+		old_lsn = new_lsn;
 
 	if (difftime(time(NULL), srv_last_monitor_time) > 60) {
 		/* We referesh InnoDB Monitor values so that averages are

@@ -80,11 +80,11 @@ mutex_test_and_set(
 	mutex_t*	mutex)	/*!< in: mutex */
 {
 #if defined(HAVE_ATOMIC_BUILTINS)
-	return(os_atomic_test_and_set_byte(&mutex->lock_word, 1));
+	return(os_atomic_test_and_set_byte_acquire(&mutex->lock_word, 1));
 #else
 	ibool	ret;
 
-	ret = os_fast_mutex_trylock(&(mutex->os_fast_mutex));
+	ret = os_fast_mutex_trylock_full_barrier(&(mutex->os_fast_mutex));
 
 	if (ret == 0) {
 		/* We check that os_fast_mutex_trylock does not leak
@@ -111,11 +111,11 @@ mutex_reset_lock_word(
 	/* In theory __sync_lock_release should be used to release the lock.
 	Unfortunately, it does not work properly alone. The workaround is
 	that more conservative __sync_lock_test_and_set is used instead. */
-	os_atomic_test_and_set_byte(&mutex->lock_word, 0);
+	os_atomic_test_and_set_byte_release(&mutex->lock_word, 0);
 #else
 	mutex->lock_word = 0;
 
-	os_fast_mutex_unlock(&(mutex->os_fast_mutex));
+	os_fast_mutex_unlock_full_barrier(&(mutex->os_fast_mutex));
 #endif
 }
 

@@ -92,6 +92,7 @@ PATENT RIGHTS GRANT:
 #define MYSQL_SERVER 1
 #include "hatoku_defines.h"
 #include <db.h>
+#include <ctype.h>
 
 #include "stdint.h"
 #if defined(_WIN32)
@@ -273,11 +274,15 @@ static uint32_t tokudb_checkpointing_period;
 static uint32_t tokudb_fsync_log_period;
 uint32_t tokudb_write_status_frequency;
 uint32_t tokudb_read_status_frequency;
+
 #ifdef TOKUDB_VERSION
-char *tokudb_version = (char*) TOKUDB_VERSION;
+#define tokudb_stringify_2(x) #x
+#define tokudb_stringify(x) tokudb_stringify_2(x)
+#define TOKUDB_VERSION_STR tokudb_stringify(TOKUDB_VERSION)
 #else
-char *tokudb_version;
+#define TOKUDB_VERSION_STR NULL
 #endif
+char *tokudb_version = (char *) TOKUDB_VERSION_STR;
 static int tokudb_fs_reserve_percent;  // file system reserve as a percentage of total disk space
 
 #if defined(_WIN32)
@@ -330,7 +335,23 @@ static void handle_ydb_error(int error) {
         sql_print_error("                                                            ");
         sql_print_error("************************************************************");
         break;
+    case TOKUDB_UPGRADE_FAILURE:
+        sql_print_error("%s upgrade failed. A clean shutdown of the previous version is required.", tokudb_hton_name);
+        break;
+    default:
+        sql_print_error("%s unknown error %d", tokudb_hton_name, error);
+        break;
     }
+}
+
+static int tokudb_set_product_name(void) {
+    size_t n = strlen(tokudb_hton_name);
+    char tokudb_product_name[n+1];
+    memset(tokudb_product_name, 0, sizeof tokudb_product_name);
+    for (size_t i = 0; i < n; i++)
+        tokudb_product_name[i] = tolower(tokudb_hton_name[i]);
+    int r = db_env_set_toku_product_name(tokudb_product_name);
+    return r;
 }
 
 static int tokudb_init_func(void *p) {
@@ -346,10 +367,16 @@ static int tokudb_init_func(void *p) {
 
 #if TOKUDB_CHECK_JEMALLOC
     if (tokudb_check_jemalloc && dlsym(RTLD_DEFAULT, "mallctl") == NULL) {
-        sql_print_error("%s not initialized because jemalloc is not loaded", tokudb_hton_name);
+        sql_print_error("%s is not initialized because jemalloc is not loaded", tokudb_hton_name);
         goto error;
     }
 #endif
+
+    r = tokudb_set_product_name();
+    if (r) {
+        sql_print_error("%s can not set product name error %d", tokudb_hton_name, r);
+        goto error;
+    }
 
     tokudb_pthread_mutex_init(&tokudb_mutex, MY_MUTEX_INIT_FAST);
     (void) my_hash_init(&tokudb_open_tables, table_alias_charset, 32, 0, 0, (my_hash_get_key) tokudb_get_key, 0, 0);
@@ -532,6 +559,7 @@ static int tokudb_init_func(void *p) {
 
     if (r) {
         DBUG_PRINT("info", ("env->open %d", r));
+        handle_ydb_error(r);
         goto error;
     }
 
@@ -610,8 +638,35 @@ int tokudb_end(handlerton * hton, ha_panic_function type) {
     if (db_env) {
         if (tokudb_init_flags & DB_INIT_LOG)
             tokudb_cleanup_log_files();
-        error = db_env->close(db_env, 0);       // Error is logged
-        assert(error==0);
+        long total_prepared = 0; // count the total number of prepared txn's that we discard
+#if TOKU_INCLUDE_XA
+        while (1) {
+            // get xid's 
+            const long n_xid = 1;
+            TOKU_XA_XID xids[n_xid];
+            long n_prepared = 0;
+            error = db_env->txn_xa_recover(db_env, xids, n_xid, &n_prepared, total_prepared == 0 ? DB_FIRST : DB_NEXT);
+            assert(error == 0);
+            if (n_prepared == 0) 
+                break;
+            // discard xid's
+            for (long i = 0; i < n_xid; i++) {
+                DB_TXN *txn = NULL;
+                error = db_env->get_txn_from_xid(db_env, &xids[i], &txn);
+                assert(error == 0);
+                error = txn->discard(txn, 0);
+                assert(error == 0);
+            }
+            total_prepared += n_prepared;
+        }
+#endif
+        error = db_env->close(db_env, total_prepared > 0 ? TOKUFT_DIRTY_SHUTDOWN : 0);
+#if TOKU_INCLUDE_XA
+        if (error != 0 && total_prepared > 0) {
+            sql_print_error("%s: %ld prepared txns still live, please shutdown, error %d", tokudb_hton_name, total_prepared, error);
+        } else
+#endif
+        assert(error == 0);
         db_env = NULL;
     }
 
@@ -703,7 +758,7 @@ static void commit_txn_with_progress(DB_TXN* txn, uint32_t flags, THD* thd) {
     info.thd = thd;
     int r = txn->commit_with_progress(txn, flags, txn_progress_func, &info);
     if (r != 0) {
-        sql_print_error("tried committing transaction %p and got error code %d", txn, r);
+        sql_print_error("%s: tried committing transaction %p and got error code %d", tokudb_hton_name, txn, r);
     }
     assert(r == 0);
     thd_proc_info(thd, orig_proc_info);
@@ -715,7 +770,7 @@ static void abort_txn_with_progress(DB_TXN* txn, THD* thd) {
     info.thd = thd;
     int r = txn->abort_with_progress(txn, txn_progress_func, &info);
     if (r != 0) {
-        sql_print_error("tried aborting transaction %p and got error code %d", txn, r);
+        sql_print_error("%s: tried aborting transaction %p and got error code %d", tokudb_hton_name, txn, r);
     }
     assert(r == 0);
     thd_proc_info(thd, orig_proc_info);
@@ -792,6 +847,12 @@ static int tokudb_rollback(handlerton * hton, THD * thd, bool all) {
 static int tokudb_xa_prepare(handlerton* hton, THD* thd, bool all) {
     TOKUDB_DBUG_ENTER("");
     int r = 0;
+
+    /* if support_xa is disable, just return */
+    if (!THDVAR(thd, support_xa)) {
+        TOKUDB_DBUG_RETURN(r);
+    }
+
     DBUG_PRINT("trans", ("preparing transaction %s", all ? "all" : "stmt"));
     tokudb_trx_data *trx = (tokudb_trx_data *) thd_get_ha_data(thd, hton);
     DB_TXN* txn = all ? trx->all : trx->stmt;
@@ -814,7 +875,7 @@ static int tokudb_xa_prepare(handlerton* hton, THD* thd, bool all) {
     TOKUDB_DBUG_RETURN(r);
 }
 
-static int tokudb_xa_recover(handlerton* hton, XID*  xid_list, uint  len) {
+static int tokudb_xa_recover(handlerton* hton, XID* xid_list, uint len) {
     TOKUDB_DBUG_ENTER("");
     int r = 0;
     if (len == 0 || xid_list == NULL) {
@@ -1215,7 +1276,7 @@ static void tokudb_handle_fatal_signal(handlerton *hton __attribute__ ((__unused
 #endif
 
 static void tokudb_print_error(const DB_ENV * db_env, const char *db_errpfx, const char *buffer) {
-    sql_print_error("%s:  %s", db_errpfx, buffer);
+    sql_print_error("%s: %s", db_errpfx, buffer);
 }
 
 static void tokudb_cleanup_log_files(void) {
@@ -1394,8 +1455,35 @@ static struct st_mysql_sys_var *tokudb_system_variables[] = {
 #if TOKUDB_CHECK_JEMALLOC
     MYSQL_SYSVAR(check_jemalloc),
 #endif
+    MYSQL_SYSVAR(bulk_fetch),
+#if TOKU_INCLUDE_XA
+    MYSQL_SYSVAR(support_xa),
+#endif
+    MYSQL_SYSVAR(rpl_unique_checks),
+    MYSQL_SYSVAR(rpl_unique_checks_delay),
+    MYSQL_SYSVAR(rpl_lookup_rows),
+    MYSQL_SYSVAR(rpl_lookup_rows_delay),
     NULL
 };
+
+// Split ./database/table-dictionary into database, table and dictionary strings
+static void tokudb_split_dname(const char *dname, String &database_name, String &table_name, String &dictionary_name) {
+    const char *splitter = strchr(dname, '/');
+    if (splitter) {
+        const char *database_ptr = splitter+1;
+        const char *table_ptr = strchr(database_ptr, '/');
+        if (table_ptr) {
+            database_name.append(database_ptr, table_ptr - database_ptr);
+            table_ptr += 1;
+            const char *dictionary_ptr = strchr(table_ptr, '-');
+            if (dictionary_ptr) {
+                table_name.append(table_ptr, dictionary_ptr - table_ptr);
+                dictionary_ptr += 1;
+                dictionary_name.append(dictionary_ptr);
+            }
+        }
+    }
+}
 
 struct st_mysql_storage_engine tokudb_storage_engine = { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
@@ -1442,34 +1530,17 @@ static int tokudb_file_map(TABLE *table, THD *thd) {
             assert(iname_len == curr_val.size - 1);
             table->field[1]->store(iname, iname_len, system_charset_info);
 
-            // denormalize the dname
-            const char *database_name = NULL;
-            size_t database_len = 0;
-            const char *table_name = NULL;
-            size_t table_len = 0;
-            const char *dictionary_name = NULL;
-            size_t dictionary_len = 0;
-            database_name = strchr(dname, '/');
-            if (database_name) {
-                database_name += 1;
-                table_name = strchr(database_name, '/');
-                if (table_name) {
-                    database_len = table_name - database_name;
-                    table_name += 1;
-                    dictionary_name = strchr(table_name, '-');
-                    if (dictionary_name) {
-                        table_len = dictionary_name - table_name;
-                        dictionary_name += 1;
-                        dictionary_len = strlen(dictionary_name);
-                    }
-                }
-            }
-            table->field[2]->store(database_name, database_len, system_charset_info);
-            table->field[3]->store(table_name, table_len, system_charset_info);
-            table->field[4]->store(dictionary_name, dictionary_len, system_charset_info);
+            // split the dname
+            String database_name, table_name, dictionary_name;
+            tokudb_split_dname(dname, database_name, table_name, dictionary_name);
+            table->field[2]->store(database_name.c_ptr(), database_name.length(), system_charset_info);
+            table->field[3]->store(table_name.c_ptr(), table_name.length(), system_charset_info);
+            table->field[4]->store(dictionary_name.c_ptr(), dictionary_name.length(), system_charset_info);
 
             error = schema_table_store_record(thd, table);
         }
+        if (!error && thd_killed(thd))
+            error = ER_QUERY_INTERRUPTED;
     }
     if (error == DB_NOTFOUND) {
         error = 0;
@@ -1497,10 +1568,12 @@ static int tokudb_file_map_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) 
     rw_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
-        my_error(ER_PLUGIN_IS_NOT_LOADED, MYF(0), "TokuDB");
-        error = -1;
+        error = ER_PLUGIN_IS_NOT_LOADED;
+        my_error(error, MYF(0), tokudb_hton_name);
     } else {
         error = tokudb_file_map(table, thd);
+        if (error)
+            my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
     rw_unlock(&tokudb_hton_initialized_lock);
@@ -1527,6 +1600,9 @@ static ST_FIELD_INFO tokudb_fractal_tree_info_field_info[] = {
     {"bt_num_blocks_in_use", 0, MYSQL_TYPE_LONGLONG, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"bt_size_allocated", 0, MYSQL_TYPE_LONGLONG, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"bt_size_in_use", 0, MYSQL_TYPE_LONGLONG, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"table_schema", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"table_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"table_dictionary_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {NULL, 0, MYSQL_TYPE_NULL, 0, 0, NULL, SKIP_OPEN_TABLE}
 };
 
@@ -1564,25 +1640,25 @@ static int tokudb_report_fractal_tree_info_for_db(const DBT *dname, const DBT *i
     // Recalculate and check just to be safe.
     {
         size_t dname_len = strlen((const char *)dname->data);
-        size_t iname_len = strlen((const char *)iname->data);
         assert(dname_len == dname->size - 1);
+        table->field[0]->store((char *)dname->data, dname_len, system_charset_info);
+        size_t iname_len = strlen((const char *)iname->data);
         assert(iname_len == iname->size - 1);
-        table->field[0]->store(
-            (char *)dname->data,
-            dname_len,
-            system_charset_info
-            );
-        table->field[1]->store(
-            (char *)iname->data,
-            iname_len,
-            system_charset_info
-            );
+        table->field[1]->store((char *)iname->data, iname_len, system_charset_info);
     }
     table->field[2]->store(bt_num_blocks_allocated, false);
     table->field[3]->store(bt_num_blocks_in_use, false);
     table->field[4]->store(bt_size_allocated, false);
     table->field[5]->store(bt_size_in_use, false);
 
+    // split the dname
+    {
+        String database_name, table_name, dictionary_name;
+        tokudb_split_dname((const char *)dname->data, database_name, table_name, dictionary_name);
+        table->field[6]->store(database_name.c_ptr(), database_name.length(), system_charset_info);
+        table->field[7]->store(table_name.c_ptr(), table_name.length(), system_charset_info);
+        table->field[8]->store(dictionary_name.c_ptr(), dictionary_name.length(), system_charset_info);
+    }
     error = schema_table_store_record(thd, table);
 
 exit:
@@ -1606,15 +1682,12 @@ static int tokudb_fractal_tree_info(TABLE *table, THD *thd) {
         goto cleanup;
     }
     while (error == 0) {
-        error = tmp_cursor->c_get(
-            tmp_cursor,
-            &curr_key,
-            &curr_val,
-            DB_NEXT
-            );
+        error = tmp_cursor->c_get(tmp_cursor, &curr_key, &curr_val, DB_NEXT);
         if (!error) {
             error = tokudb_report_fractal_tree_info_for_db(&curr_key, &curr_val, table, thd);
         }
+        if (!error && thd_killed(thd))
+            error = ER_QUERY_INTERRUPTED;
     }
     if (error == DB_NOTFOUND) {
         error = 0;
@@ -1644,10 +1717,12 @@ static int tokudb_fractal_tree_info_fill_table(THD *thd, TABLE_LIST *tables, CON
     rw_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
-        my_error(ER_PLUGIN_IS_NOT_LOADED, MYF(0), "TokuDB");
-        error = -1;
+        error = ER_PLUGIN_IS_NOT_LOADED;
+        my_error(error, MYF(0), tokudb_hton_name);
     } else {
         error = tokudb_fractal_tree_info(table, thd);
+        if (error)
+            my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
     //3938: unlock the status flag lock
@@ -1675,6 +1750,9 @@ static ST_FIELD_INFO tokudb_fractal_tree_block_map_field_info[] = {
     {"blocknum", 0, MYSQL_TYPE_LONGLONG, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"offset", 0, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, NULL, SKIP_OPEN_TABLE },
     {"size", 0, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, NULL, SKIP_OPEN_TABLE },
+    {"table_schema", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"table_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"table_dictionary_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {NULL, 0, MYSQL_TYPE_NULL, 0, 0, NULL, SKIP_OPEN_TABLE}
 };
 
@@ -1747,19 +1825,13 @@ static int tokudb_report_fractal_tree_block_map_for_db(const DBT *dname, const D
         // See #5789
         // Recalculate and check just to be safe.
         size_t dname_len = strlen((const char *)dname->data);
-        size_t iname_len = strlen((const char *)iname->data);
         assert(dname_len == dname->size - 1);
+        table->field[0]->store((char *)dname->data, dname_len, system_charset_info);
+
+        size_t iname_len = strlen((const char *)iname->data);
         assert(iname_len == iname->size - 1);
-        table->field[0]->store(
-            (char *)dname->data,
-            dname_len,
-            system_charset_info
-            );
-        table->field[1]->store(
-            (char *)iname->data,
-            iname_len,
-            system_charset_info
-            );
+        table->field[1]->store((char *)iname->data, iname_len, system_charset_info);
+
         table->field[2]->store(e.checkpoint_counts[i], false);
         table->field[3]->store(e.blocknums[i], false);
         static const int64_t freelist_null = -1;
@@ -1777,6 +1849,13 @@ static int tokudb_report_fractal_tree_block_map_for_db(const DBT *dname, const D
             table->field[5]->set_notnull();
             table->field[5]->store(e.sizes[i], false);
         }
+
+        // split the dname
+        String database_name, table_name, dictionary_name;
+        tokudb_split_dname((const char *)dname->data, database_name, table_name,dictionary_name);
+        table->field[6]->store(database_name.c_ptr(), database_name.length(), system_charset_info);
+        table->field[7]->store(table_name.c_ptr(), table_name.length(), system_charset_info);
+        table->field[8]->store(dictionary_name.c_ptr(), dictionary_name.length(), system_charset_info);
 
         error = schema_table_store_record(thd, table);
     }
@@ -1818,15 +1897,12 @@ static int tokudb_fractal_tree_block_map(TABLE *table, THD *thd) {
         goto cleanup;
     }
     while (error == 0) {
-        error = tmp_cursor->c_get(
-            tmp_cursor,
-            &curr_key,
-            &curr_val,
-            DB_NEXT
-            );
+        error = tmp_cursor->c_get(tmp_cursor, &curr_key, &curr_val, DB_NEXT);
         if (!error) {
             error = tokudb_report_fractal_tree_block_map_for_db(&curr_key, &curr_val, table, thd);
         }
+        if (!error && thd_killed(thd))
+            error = ER_QUERY_INTERRUPTED;
     }
     if (error == DB_NOTFOUND) {
         error = 0;
@@ -1856,10 +1932,12 @@ static int tokudb_fractal_tree_block_map_fill_table(THD *thd, TABLE_LIST *tables
     rw_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
-        my_error(ER_PLUGIN_IS_NOT_LOADED, MYF(0), "TokuDB");
-        error = -1;
+        error = ER_PLUGIN_IS_NOT_LOADED;
+        my_error(error, MYF(0), tokudb_hton_name);
     } else {
         error = tokudb_fractal_tree_block_map(table, thd);
+        if (error)
+            my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
     //3938: unlock the status flag lock
@@ -1968,7 +2046,7 @@ static void tokudb_lock_timeout_callback(DB *db, uint64_t requesting_txnid, cons
         }
         // dump to stderr
         if (lock_timeout_debug & 2) {
-            TOKUDB_TRACE("%s", log_str.c_ptr());
+            sql_print_error("%s: %s", tokudb_hton_name, log_str.c_ptr());
         }
     }
 }
@@ -1993,6 +2071,8 @@ static int tokudb_trx_callback(uint64_t txn_id, uint64_t client_id, iterate_row_
     table->field[0]->store(txn_id, false);
     table->field[1]->store(client_id, false);
     int error = schema_table_store_record(thd, table);
+    if (!error && thd_killed(thd))
+        error = ER_QUERY_INTERRUPTED;
     return error;
 }
 
@@ -2007,11 +2087,13 @@ static int tokudb_trx_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) {
     rw_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
-        my_error(ER_PLUGIN_IS_NOT_LOADED, MYF(0), "TokuDB");
-        error = -1;
+        error = ER_PLUGIN_IS_NOT_LOADED;
+        my_error(error, MYF(0), tokudb_hton_name);
     } else {
         struct tokudb_trx_extra e = { thd, tables->table };
         error = db_env->iterate_live_transactions(db_env, tokudb_trx_callback, &e);
+        if (error)
+            my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
     rw_unlock(&tokudb_hton_initialized_lock);
@@ -2038,6 +2120,9 @@ static ST_FIELD_INFO tokudb_lock_waits_field_info[] = {
     {"lock_waits_key_left", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"lock_waits_key_right", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"lock_waits_start_time", 0, MYSQL_TYPE_LONGLONG, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"lock_waits_table_schema", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"lock_waits_table_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"lock_waits_table_dictionary_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {NULL, 0, MYSQL_TYPE_NULL, 0, 0, NULL, SKIP_OPEN_TABLE}
 };
 
@@ -2063,7 +2148,18 @@ static int tokudb_lock_waits_callback(DB *db, uint64_t requesting_txnid, const D
     tokudb_pretty_right_key(db, right_key, &right_str);
     table->field[4]->store(right_str.ptr(), right_str.length(), system_charset_info);
     table->field[5]->store(start_time, false);
+
+    String database_name, table_name, dictionary_name;
+    tokudb_split_dname(dname, database_name, table_name, dictionary_name);
+    table->field[6]->store(database_name.c_ptr(), database_name.length(), system_charset_info);
+    table->field[7]->store(table_name.c_ptr(), table_name.length(), system_charset_info);
+    table->field[8]->store(dictionary_name.c_ptr(), dictionary_name.length(), system_charset_info);
+
     int error = schema_table_store_record(thd, table);
+
+    if (!error && thd_killed(thd))
+        error = ER_QUERY_INTERRUPTED;
+
     return error;
 }
 
@@ -2078,11 +2174,13 @@ static int tokudb_lock_waits_fill_table(THD *thd, TABLE_LIST *tables, COND *cond
     rw_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
-        my_error(ER_PLUGIN_IS_NOT_LOADED, MYF(0), "TokuDB");
-        error = -1;
+        error = ER_PLUGIN_IS_NOT_LOADED;
+        my_error(error, MYF(0), tokudb_hton_name);
     } else {
         struct tokudb_lock_waits_extra e = { thd, tables->table };
         error = db_env->iterate_pending_lock_requests(db_env, tokudb_lock_waits_callback, &e);
+        if (error)
+            my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
     rw_unlock(&tokudb_hton_initialized_lock);
@@ -2108,6 +2206,9 @@ static ST_FIELD_INFO tokudb_locks_field_info[] = {
     {"locks_dname", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"locks_key_left", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {"locks_key_right", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"locks_table_schema", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"locks_table_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
+    {"locks_table_dictionary_name", 256, MYSQL_TYPE_STRING, 0, 0, NULL, SKIP_OPEN_TABLE },
     {NULL, 0, MYSQL_TYPE_NULL, 0, 0, NULL, SKIP_OPEN_TABLE}
 };
 
@@ -2139,7 +2240,16 @@ static int tokudb_locks_callback(uint64_t txn_id, uint64_t client_id, iterate_ro
         tokudb_pretty_right_key(db, &right_key, &right_str);
         table->field[4]->store(right_str.ptr(), right_str.length(), system_charset_info);
 
+        String database_name, table_name, dictionary_name;
+        tokudb_split_dname(dname, database_name, table_name, dictionary_name);
+        table->field[5]->store(database_name.c_ptr(), database_name.length(), system_charset_info);
+        table->field[6]->store(table_name.c_ptr(), table_name.length(), system_charset_info);
+        table->field[7]->store(dictionary_name.c_ptr(), dictionary_name.length(), system_charset_info);
+
         error = schema_table_store_record(thd, table);
+
+        if (!error && thd_killed(thd))
+            error = ER_QUERY_INTERRUPTED;
     }
     return error;
 }
@@ -2155,11 +2265,13 @@ static int tokudb_locks_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) {
     rw_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
-        my_error(ER_PLUGIN_IS_NOT_LOADED, MYF(0), "TokuDB");
-        error = -1;
+        error = ER_PLUGIN_IS_NOT_LOADED;
+        my_error(error, MYF(0), tokudb_hton_name);
     } else {
         struct tokudb_locks_extra e = { thd, tables->table };
         error = db_env->iterate_live_transactions(db_env, tokudb_locks_callback, &e);
+        if (error)
+            my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
     rw_unlock(&tokudb_hton_initialized_lock);
@@ -2176,9 +2288,6 @@ static int tokudb_locks_init(void *p) {
 static int tokudb_locks_done(void *p) {
     return 0;
 }
-
-enum { TOKUDB_PLUGIN_VERSION = 0x0400 };
-#define TOKUDB_PLUGIN_VERSION_STR "1024"
 
 // Retrieves variables for information_schema.global_status.
 // Names (columnname) are automatically converted to upper case, and prefixed with "TOKUDB_"
@@ -2278,131 +2387,17 @@ static void tokudb_backtrace(void) {
 }
 #endif
 
-mysql_declare_plugin(tokudb) 
-{
-    MYSQL_STORAGE_ENGINE_PLUGIN, 
-    &tokudb_storage_engine, 
-    tokudb_hton_name, 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_init_func,          /* plugin init */
-    tokudb_done_func,          /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    toku_global_status_variables_export,  /* status variables */
-    tokudb_system_variables,   /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
+#if defined(TOKUDB_VERSION_MAJOR) && defined(TOKUDB_VERSION_MINOR)
+#define TOKUDB_PLUGIN_VERSION ((TOKUDB_VERSION_MAJOR << 8) + TOKUDB_VERSION_MINOR)
+#else
+#define TOKUDB_PLUGIN_VERSION 0
 #endif
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN, 
-    &tokudb_trx_information_schema,
-    "TokuDB_trx", 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_trx_init,     /* plugin init */
-    tokudb_trx_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    NULL,                      /* status variables */
-    NULL,                      /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
-#endif
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN, 
-    &tokudb_lock_waits_information_schema,
-    "TokuDB_lock_waits", 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_lock_waits_init,     /* plugin init */
-    tokudb_lock_waits_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    NULL,                      /* status variables */
-    NULL,                      /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
-#endif
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN, 
-    &tokudb_locks_information_schema,
-    "TokuDB_locks", 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_locks_init,     /* plugin init */
-    tokudb_locks_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    NULL,                      /* status variables */
-    NULL,                      /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
-#endif
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN, 
-    &tokudb_file_map_information_schema, 
-    "TokuDB_file_map", 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_file_map_init,     /* plugin init */
-    tokudb_file_map_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    NULL,                      /* status variables */
-    NULL,                      /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
-#endif
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN, 
-    &tokudb_fractal_tree_info_information_schema, 
-    "TokuDB_fractal_tree_info", 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_fractal_tree_info_init,     /* plugin init */
-    tokudb_fractal_tree_info_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    NULL,                      /* status variables */
-    NULL,                      /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
-#endif
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN, 
-    &tokudb_fractal_tree_block_map_information_schema, 
-    "TokuDB_fractal_tree_block_map", 
-    "Tokutek Inc", 
-    "Tokutek TokuDB Storage Engine with Fractal Tree(tm) Technology",
-    PLUGIN_LICENSE_GPL,
-    tokudb_fractal_tree_block_map_init,     /* plugin init */
-    tokudb_fractal_tree_block_map_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
-    NULL,                      /* status variables */
-    NULL,                      /* system variables */
-    NULL,                      /* config options */
-#if MYSQL_VERSION_ID >= 50521
-    0,                         /* flags */
-#endif
-}
-mysql_declare_plugin_end;
 
 #ifdef MARIA_PLUGIN_INTERFACE_VERSION
-
 maria_declare_plugin(tokudb) 
+#else
+mysql_declare_plugin(tokudb) 
+#endif
 {
     MYSQL_STORAGE_ENGINE_PLUGIN, 
     &tokudb_storage_engine, 
@@ -2412,11 +2407,16 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_init_func,          /* plugin init */
     tokudb_done_func,          /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     toku_global_status_variables_export,  /* status variables */
     tokudb_system_variables,   /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN, 
@@ -2427,11 +2427,16 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_trx_init,     /* plugin init */
     tokudb_trx_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     NULL,                      /* status variables */
     NULL,                      /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN, 
@@ -2442,11 +2447,16 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_lock_waits_init,     /* plugin init */
     tokudb_lock_waits_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     NULL,                      /* status variables */
     NULL,                      /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN, 
@@ -2457,11 +2467,16 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_locks_init,     /* plugin init */
     tokudb_locks_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     NULL,                      /* status variables */
     NULL,                      /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN, 
@@ -2472,11 +2487,16 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_file_map_init,     /* plugin init */
     tokudb_file_map_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     NULL,                      /* status variables */
     NULL,                      /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN, 
@@ -2487,11 +2507,16 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_fractal_tree_info_init,     /* plugin init */
     tokudb_fractal_tree_info_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     NULL,                      /* status variables */
     NULL,                      /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN, 
@@ -2502,12 +2527,19 @@ maria_declare_plugin(tokudb)
     PLUGIN_LICENSE_GPL,
     tokudb_fractal_tree_block_map_init,     /* plugin init */
     tokudb_fractal_tree_block_map_done,     /* plugin deinit */
-    TOKUDB_PLUGIN_VERSION,     /* 4.0.0 */
+    TOKUDB_PLUGIN_VERSION,
     NULL,                      /* status variables */
     NULL,                      /* system variables */
-    TOKUDB_PLUGIN_VERSION_STR, /* string version */
-    MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
+    tokudb_version,
+    MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+#else
+    NULL,                      /* config options */
+    0,                         /* flags */
+#endif
 }
+#ifdef MARIA_PLUGIN_INTERFACE_VERSION
 maria_declare_plugin_end;
-
+#else
+mysql_declare_plugin_end;
 #endif

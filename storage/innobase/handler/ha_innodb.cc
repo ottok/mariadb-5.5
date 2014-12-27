@@ -2261,7 +2261,7 @@ innobase_init(
         innobase_hton->start_consistent_snapshot=innobase_start_trx_and_assign_read_view;
         innobase_hton->flush_logs=innobase_flush_logs;
         innobase_hton->show_status=innobase_show_status;
-        innobase_hton->flags=HTON_EXTENDED_KEYS;
+        innobase_hton->flags=HTON_EXTENDED_KEYS | HTON_SUPPORTS_FOREIGN_KEYS;
         innobase_hton->release_temporary_latches=innobase_release_temporary_latches;
 	innobase_hton->alter_table_flags = innobase_alter_table_flags;
         innobase_hton->kill_query = innobase_kill_query;
@@ -9331,6 +9331,7 @@ ha_innobase::start_stmt(
 	thr_lock_type	lock_type)
 {
 	trx_t*		trx;
+	DBUG_ENTER("ha_innobase::start_stmt");
 
 	update_thd(thd);
 
@@ -9352,6 +9353,28 @@ ha_innobase::start_stmt(
 	prebuilt->sql_stat_start = TRUE;
 	prebuilt->hint_need_to_fetch_extra_cols = 0;
 	reset_template(prebuilt);
+
+	if (dict_table_is_temporary(prebuilt->table)
+	    && prebuilt->mysql_has_locked
+	    && prebuilt->select_lock_type == LOCK_NONE) {
+		ulint error;
+
+		switch (thd_sql_command(thd)) {
+		case SQLCOM_INSERT:
+		case SQLCOM_UPDATE:
+		case SQLCOM_DELETE:
+			init_table_handle_for_HANDLER();
+			prebuilt->select_lock_type = LOCK_X;
+			error = row_lock_table_for_mysql(prebuilt, NULL, 1);
+
+			if (error != DB_SUCCESS) {
+				error = convert_error_code_to_mysql(
+					(int) error, 0, thd);
+				DBUG_RETURN((int) error);
+			}
+			break;
+		}
+	}
 
 	if (!prebuilt->mysql_has_locked) {
 		/* This handle is for a temporary table created inside
@@ -9385,7 +9408,7 @@ ha_innobase::start_stmt(
 
 	innobase_register_trx(ht, thd, trx);
 
-	return(0);
+	DBUG_RETURN(0);
 }
 
 /******************************************************************//**
@@ -11739,6 +11762,16 @@ static MYSQL_SYSVAR_ULONGLONG(stats_sample_pages, srv_stats_sample_pages,
   "The number of index pages to sample when calculating statistics (default 8)",
   NULL, NULL, 8, 1, ~0ULL, 0);
 
+static MYSQL_SYSVAR_ULONGLONG(stats_modified_counter, srv_stats_modified_counter,
+  PLUGIN_VAR_RQCMDARG,
+  "The number of rows modified before we calculate new statistics (default 0 = current limits)",
+  NULL, NULL, 0, 0, ~0ULL, 0);
+
+static MYSQL_SYSVAR_BOOL(stats_traditional, srv_stats_sample_traditional,
+  PLUGIN_VAR_RQCMDARG,
+  "Enable traditional statistic calculation based on number of configured pages (default true)",
+  NULL, NULL, TRUE);
+
 static MYSQL_SYSVAR_BOOL(adaptive_hash_index, btr_search_enabled,
   PLUGIN_VAR_OPCMDARG,
   "Enable InnoDB adaptive hash index (enabled by default).  "
@@ -12001,6 +12034,8 @@ static struct st_mysql_sys_var* innobase_system_variables[]= {
   MYSQL_SYSVAR(rollback_on_timeout),
   MYSQL_SYSVAR(stats_on_metadata),
   MYSQL_SYSVAR(stats_sample_pages),
+  MYSQL_SYSVAR(stats_modified_counter),
+  MYSQL_SYSVAR(stats_traditional),
   MYSQL_SYSVAR(adaptive_hash_index),
   MYSQL_SYSVAR(stats_method),
   MYSQL_SYSVAR(replication_delay),
@@ -12219,4 +12254,31 @@ innobase_convert_to_filename_charset(
 	CHARSET_INFO*	cs_from = system_charset_info;
 
 	return(strconvert(cs_from, from, cs_to, to, len, &errors));
+}
+
+
+/**********************************************************************
+Issue a warning that the row is too big. */
+extern "C"
+void
+ib_warn_row_too_big(const dict_table_t*	table)
+{
+	/* If prefix is true then a 768-byte prefix is stored
+	locally for BLOB fields. Refer to dict_table_get_format() */
+	const bool	prefix = ((table->flags & DICT_TF_FORMAT_MASK)
+				  >> DICT_TF_FORMAT_SHIFT) < UNIV_FORMAT_B;
+
+	const ulint	free_space = page_get_free_space_of_empty(
+		table->flags & DICT_TF_COMPACT) / 2;
+
+	THD*	thd = current_thd;
+
+	push_warning_printf(
+		thd, MYSQL_ERROR::WARN_LEVEL_WARN, HA_ERR_TO_BIG_ROW,
+		"Row size too large (> %lu). Changing some columns to TEXT"
+		" or BLOB %smay help. In current row format, BLOB prefix of"
+		" %d bytes is stored inline.", free_space
+		, prefix ? "or using ROW_FORMAT=DYNAMIC or"
+		" ROW_FORMAT=COMPRESSED ": ""
+		, prefix ? DICT_MAX_FIXED_COL_LEN : 0);
 }
