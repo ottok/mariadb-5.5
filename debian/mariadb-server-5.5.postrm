@@ -52,9 +52,9 @@ if [ "$1" = "purge" -a ! \( -x /usr/sbin/mysqld -o -L /usr/sbin/mysqld \) ]; the
   rm -f /var/log/mysql.{log,err}{,.0,.[1234567].gz}
   rm -rf /var/log/mysql
 
-  db_input high mysql-server-5.5/postrm_remove_databases || true
+  db_input high maria-server-5.5/postrm_remove_databases || true
   db_go || true
-  db_get mysql-server-5.5/postrm_remove_databases || true
+  db_get maria-server-5.5/postrm_remove_databases || true
   if [ "$RET" = "true" ]; then
     # never remove the debian.cnf when the databases are still existing
     # else we ran into big trouble on the next install!
@@ -63,20 +63,7 @@ if [ "$1" = "purge" -a ! \( -x /usr/sbin/mysqld -o -L /usr/sbin/mysqld \) ]; the
     rm -rf /var/run/mysqld # this directory is created by the init script, don't leave behind
     userdel mysql || true
   fi
-
-  # (normally) Automatically added by dh_installinit
-  if [ "$1" = "purge" ] ; then
-        update-rc.d mysql remove >/dev/null || exit 0
-  fi
-  # (normally) End automatically added section
 fi
-
-# (normally) Automatically added by dh_installdebconf
-if [ "$1" = purge ] && [ -e /usr/share/debconf/confmodule ]; then
-        . /usr/share/debconf/confmodule
-        db_purge
-fi
-# (normally) End automatically added section
 
 #DEBHELPER#
 

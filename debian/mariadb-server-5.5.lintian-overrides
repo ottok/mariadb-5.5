@@ -1,6 +1,6 @@
 # Embedded from same source is OK
 mariadb-server-5.5: embedded-library usr/bin/mysqlbinlog: libmysqlclient
 # ash's buildin has no "-e" so use /bin/echo
-mariadb-server-5.5: command-with-path-in-maintainer-script postinst:195 /bin/echo
-mariadb-server-5.5: command-with-path-in-maintainer-script postinst:209 /bin/echo
-mariadb-server-5.5: command-with-path-in-maintainer-script postinst:217 /bin/echo
+mariadb-server-5.5: command-with-path-in-maintainer-script postinst:199 /bin/echo
+mariadb-server-5.5: command-with-path-in-maintainer-script postinst:213 /bin/echo
+mariadb-server-5.5: command-with-path-in-maintainer-script postinst:221 /bin/echo
