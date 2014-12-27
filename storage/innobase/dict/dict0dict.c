@@ -42,6 +42,12 @@ UNIV_INTERN dict_index_t*	dict_ind_compact;
 UNIV_INTERN uint	ibuf_debug;
 #endif /* UNIV_DEBUG || UNIV_IBUF_DEBUG */
 
+/**********************************************************************
+Issue a warning that the row is too big. */
+void
+ib_warn_row_too_big(const dict_table_t*	table);
+
+
 #ifndef UNIV_HOTBACKUP
 #include "buf0buf.h"
 #include "data0type.h"
@@ -1123,6 +1129,11 @@ dict_table_rename_in_cache(
 		/* The id will be changed.  So remove old one */
 		rbt_delete(foreign->foreign_table->foreign_rbt, foreign->id);
 
+		if (foreign->referenced_table) {
+			rbt_delete(foreign->referenced_table->referenced_rbt,
+				   foreign->id);
+		}
+
 		if (ut_strlen(foreign->foreign_table_name)
 		    < ut_strlen(table->name)) {
 			/* Allocate a longer name buffer;
@@ -1272,6 +1283,11 @@ dict_table_rename_in_cache(
 
 		rbt_insert(foreign->foreign_table->foreign_rbt,
 			   foreign->id, &foreign);
+
+		if (foreign->referenced_table) {
+			rbt_insert(foreign->referenced_table->referenced_rbt,
+				   foreign->id, &foreign);
+		}
 
 		foreign = UT_LIST_GET_NEXT(foreign_list, foreign);
 	}
@@ -1755,11 +1771,18 @@ dict_index_add_to_cache(
 
 	new_index->n_fields = new_index->n_def;
 
-	if (strict && dict_index_too_big_for_tree(table, new_index)) {
+	if (dict_index_too_big_for_tree(table, new_index)) {
+
+		if (strict) {
 too_big:
-		dict_mem_index_free(new_index);
-		dict_mem_index_free(index);
-		return(DB_TOO_BIG_RECORD);
+			dict_mem_index_free(new_index);
+			dict_mem_index_free(index);
+			return(DB_TOO_BIG_RECORD);
+		} else {
+
+			ib_warn_row_too_big(table);
+
+		}
 	}
 
 	if (UNIV_UNLIKELY(index->type & DICT_UNIVERSAL)) {
@@ -2506,8 +2529,15 @@ dict_foreign_remove_from_cache(
 			       foreign);
 
 		rbt = foreign->referenced_table->referenced_rbt;
+
 		if (rbt != NULL) {
-			rbt_delete(rbt, foreign->id);
+			const ib_rbt_node_t*	node
+				= rbt_lookup(rbt, foreign->id);
+			dict_foreign_t*	val = *(dict_foreign_t**) node->value;
+
+			if (val == foreign) {
+				rbt_delete(rbt, foreign->id);
+			}
 		}
 	}
 
@@ -2520,7 +2550,13 @@ dict_foreign_remove_from_cache(
 		rbt = foreign->foreign_table->foreign_rbt;
 
 		if (rbt != NULL) {
-			rbt_delete(rbt, foreign->id);
+			const ib_rbt_node_t*	node
+				= rbt_lookup(rbt, foreign->id);
+			dict_foreign_t*	val = *(dict_foreign_t**) node->value;
+
+			if (val == foreign) {
+				rbt_delete(rbt, foreign->id);
+			}
 		}
 	}
 
@@ -5364,6 +5400,11 @@ dict_find_table_by_space(
 
 	ut_ad(space_id > 0);
 
+	if (dict_sys == NULL) {
+		/* This could happen when it's in redo processing. */
+		return(NULL);
+	}
+
 	table = UT_LIST_GET_FIRST(dict_sys->table_LRU);
 	num_item =  UT_LIST_GET_LEN(dict_sys->table_LRU);
 
@@ -5470,11 +5511,11 @@ dict_set_corrupted(
 
 	dict_index_copy_types(tuple, sys_index, 2);
 
-	btr_cur_search_to_nth_level(sys_index, 0, tuple, PAGE_CUR_GE,
+	btr_cur_search_to_nth_level(sys_index, 0, tuple, PAGE_CUR_LE,
 				    BTR_MODIFY_LEAF,
 				    &cursor, 0, __FILE__, __LINE__, &mtr);
 
-	if (cursor.up_match == dtuple_get_n_fields(tuple)) {
+	if (cursor.low_match == dtuple_get_n_fields(tuple)) {
 		/* UPDATE SYS_INDEXES SET TYPE=index->type
 		WHERE TABLE_ID=index->table->id AND INDEX_ID=index->id */
 		ulint	len;

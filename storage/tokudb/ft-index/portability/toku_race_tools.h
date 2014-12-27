@@ -29,7 +29,7 @@ COPYING CONDITIONS NOTICE:
 
 COPYRIGHT NOTICE:
 
-  TokuDB, Tokutek Fractal Tree Indexing Library.
+  TokuFT, Tokutek Fractal Tree Indexing Library.
   Copyright (C) 2007-2013 Tokutek, Inc.
 
 DISCLAIMER:
@@ -86,10 +86,10 @@ PATENT RIGHTS GRANT:
   under this License.
 */
 
+#pragma once
+
 #ident "Copyright (c) 2007-2013 Tokutek Inc.  All rights reserved."
 #ident "The technology is licensed by the Massachusetts Institute of Technology, Rutgers State University of New Jersey, and the Research Foundation of State University of New York at Stony Brook under United States of America Serial No. 11/760379 and to the patents and/or patent applications resulting from it."
-#ifndef TOKU_RACE_TOOLS_H
-#define TOKU_RACE_TOOLS_H
 
 #include <portability/toku_config.h>
 
@@ -103,6 +103,10 @@ PATENT RIGHTS GRANT:
 # define TOKU_VALGRIND_HG_DISABLE_CHECKING(p, size) VALGRIND_HG_DISABLE_CHECKING(p, size)
 # define TOKU_DRD_IGNORE_VAR(v) DRD_IGNORE_VAR(v)
 # define TOKU_DRD_STOP_IGNORING_VAR(v) DRD_STOP_IGNORING_VAR(v)
+# define TOKU_ANNOTATE_IGNORE_READS_BEGIN() ANNOTATE_IGNORE_READS_BEGIN()
+# define TOKU_ANNOTATE_IGNORE_READS_END() ANNOTATE_IGNORE_READS_END()
+# define TOKU_ANNOTATE_IGNORE_WRITES_BEGIN() ANNOTATE_IGNORE_WRITES_BEGIN()
+# define TOKU_ANNOTATE_IGNORE_WRITES_END() ANNOTATE_IGNORE_WRITES_END()
 
 /*
  * How to make helgrind happy about tree rotations and new mutex orderings:
@@ -134,9 +138,51 @@ PATENT RIGHTS GRANT:
 # define TOKU_VALGRIND_HG_DISABLE_CHECKING(p, size) ((void) 0)
 # define TOKU_DRD_IGNORE_VAR(v)
 # define TOKU_DRD_STOP_IGNORING_VAR(v)
+# define TOKU_ANNOTATE_IGNORE_READS_BEGIN() ((void) 0)
+# define TOKU_ANNOTATE_IGNORE_READS_END() ((void) 0)
+# define TOKU_ANNOTATE_IGNORE_WRITES_BEGIN() ((void) 0)
+# define TOKU_ANNOTATE_IGNORE_WRITES_END() ((void) 0)
 # define TOKU_VALGRIND_RESET_MUTEX_ORDERING_INFO(mutex)
 # define RUNNING_ON_VALGRIND (0U)
 
 #endif
 
-#endif // TOKU_RACE_TOOLS_H
+namespace data_race {
+
+    template<typename T>
+    class unsafe_read {
+        const T &_val;
+    public:
+        unsafe_read(const T &val)
+            : _val(val) {
+            TOKU_VALGRIND_HG_DISABLE_CHECKING(&_val, sizeof _val);
+            TOKU_ANNOTATE_IGNORE_READS_BEGIN();
+        }
+        ~unsafe_read() {
+            TOKU_ANNOTATE_IGNORE_READS_END();
+            TOKU_VALGRIND_HG_ENABLE_CHECKING(&_val, sizeof _val);
+        }
+        operator T() const {
+            return _val;
+        }
+    };
+
+} // namespace data_race
+
+// Unsafely fetch and return a `T' from src, telling drd to ignore 
+// racey access to src for the next sizeof(*src) bytes
+template <typename T>
+T toku_drd_unsafe_fetch(T *src) {
+    return data_race::unsafe_read<T>(*src);
+}
+
+// Unsafely set a `T' value into *dest from src, telling drd to ignore 
+// racey access to dest for the next sizeof(*dest) bytes
+template <typename T>
+void toku_drd_unsafe_set(T *dest, const T src) {
+    TOKU_VALGRIND_HG_DISABLE_CHECKING(dest, sizeof *dest);
+    TOKU_ANNOTATE_IGNORE_WRITES_BEGIN();
+    *dest = src;
+    TOKU_ANNOTATE_IGNORE_WRITES_END();
+    TOKU_VALGRIND_HG_ENABLE_CHECKING(dest, sizeof *dest);
+}

@@ -85,10 +85,37 @@ IF(NOT CMAKE_CROSSCOMPILING)
   }"
   HAVE_IB_GCC_ATOMIC_BUILTINS
   )
+  CHECK_C_SOURCE_RUNS(
+  "#include<stdint.h>
+  int main()
+  {
+    __sync_synchronize();
+    return(0);
+  }"
+  HAVE_IB_GCC_SYNC_SYNCHRONISE
+  )
+  CHECK_C_SOURCE_RUNS(
+  "#include<stdint.h>
+  int main()
+  {
+    __atomic_thread_fence(__ATOMIC_ACQUIRE);
+    __atomic_thread_fence(__ATOMIC_RELEASE);
+    return(0);
+  }"
+  HAVE_IB_GCC_ATOMIC_THREAD_FENCE
+  )
 ENDIF()
 
 IF(HAVE_IB_GCC_ATOMIC_BUILTINS)
  ADD_DEFINITIONS(-DHAVE_IB_GCC_ATOMIC_BUILTINS=1)
+ENDIF()
+
+IF(HAVE_IB_GCC_SYNC_SYNCHRONISE)
+ ADD_DEFINITIONS(-DHAVE_IB_GCC_SYNC_SYNCHRONISE=1)
+ENDIF()
+
+IF(HAVE_IB_GCC_ATOMIC_THREAD_FENCE)
+ ADD_DEFINITIONS(-DHAVE_IB_GCC_ATOMIC_THREAD_FENCE=1)
 ENDIF()
 
  # either define HAVE_IB_ATOMIC_PTHREAD_T_GCC or not
@@ -169,9 +196,20 @@ IF(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
       return(0);
     }
   " HAVE_IB_ATOMIC_PTHREAD_T_SOLARIS)
+  CHECK_C_SOURCE_COMPILES(
+  "#include <mbarrier.h>
+  int main() {
+    __machine_r_barrier();
+    __machine_w_barrier();
+    return(0);
+  }"
+  HAVE_IB_MACHINE_BARRIER_SOLARIS)
   ENDIF()
   IF(HAVE_IB_ATOMIC_PTHREAD_T_SOLARIS)
     ADD_DEFINITIONS(-DHAVE_IB_ATOMIC_PTHREAD_T_SOLARIS=1)
+  ENDIF()
+  IF(HAVE_IB_MACHINE_BARRIER_SOLARIS)
+    ADD_DEFINITIONS(-DHAVE_IB_MACHINE_BARRIER_SOLARIS=1)
   ENDIF()
 ENDIF()
 
@@ -190,6 +228,7 @@ ENDIF()
 
 IF(MSVC)
   ADD_DEFINITIONS(-DHAVE_WINDOWS_ATOMICS)
+  ADD_DEFINITIONS(-DHAVE_WINDOWS_MM_FENCE)
 ENDIF()
 
 
@@ -255,6 +294,14 @@ SET(INNOBASE_SOURCES	btr/btr0btr.c btr/btr0cur.c btr/btr0pcur.c btr/btr0sea.c
 			usr/usr0sess.c
 			ut/ut0byte.c ut/ut0dbg.c ut/ut0list.c ut/ut0mem.c ut/ut0rbt.c ut/ut0rnd.c
 			ut/ut0ut.c ut/ut0vec.c ut/ut0wqueue.c ut/ut0bh.c)
+
+# These files have unused result errors, so we skip Werror
+CHECK_C_COMPILER_FLAG("-Werror" HAVE_WERROR)
+IF(HAVE_WERROR)
+  INCLUDE(${MYSQL_CMAKE_SCRIPT_DIR}/compile_flags.cmake)
+  ADD_COMPILE_FLAGS(page/page0zip.c COMPILE_FLAGS "-Wno-error")
+  ADD_COMPILE_FLAGS(ut/ut0ut.c      COMPILE_FLAGS "-Wno-error")
+ENDIF()
 
 IF(WITH_INNODB)
   # Legacy option

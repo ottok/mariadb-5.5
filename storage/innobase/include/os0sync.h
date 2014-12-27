@@ -232,10 +232,27 @@ os_fast_mutex_trylock(
 /*==================*/
 	os_fast_mutex_t*	fast_mutex);	/*!< in: mutex to acquire */
 /**********************************************************//**
+Acquires ownership of a fast mutex. Implies a full memory barrier even on
+platforms such as PowerPC where this is not normally required.
+@return	0 if success, != 0 if was reserved by another thread */
+UNIV_INLINE
+ulint
+os_fast_mutex_trylock_full_barrier(
+/*==================*/
+	os_fast_mutex_t*	fast_mutex);	/*!< in: mutex to acquire */
+/**********************************************************//**
 Releases ownership of a fast mutex. */
 UNIV_INTERN
 void
 os_fast_mutex_unlock(
+/*=================*/
+	os_fast_mutex_t*	fast_mutex);	/*!< in: mutex to release */
+/**********************************************************//**
+Releases ownership of a fast mutex. Implies a full memory barrier even on
+platforms such as PowerPC where this is not normally required. */
+UNIV_INTERN
+void
+os_fast_mutex_unlock_full_barrier(
 /*=================*/
 	os_fast_mutex_t*	fast_mutex);	/*!< in: mutex to release */
 /*********************************************************//**
@@ -307,7 +324,27 @@ amount of increment. */
 /**********************************************************//**
 Returns the old value of *ptr, atomically sets *ptr to new_val */
 
-# define os_atomic_test_and_set_byte(ptr, new_val) \
+#ifdef __powerpc__
+/*
+  os_atomic_test_and_set_byte_release() should imply a release barrier before
+  setting, and a full barrier after. But __sync_lock_test_and_set() is only
+  documented as an aquire barrier. So on PowerPC we need to add the full
+  barrier explicitly.  */
+# define os_atomic_test_and_set_byte_release(ptr, new_val) \
+        do { __sync_lock_release(ptr); \
+             __sync_synchronize(); } while (0)
+#else
+/*
+  On x86, __sync_lock_test_and_set() happens to be full barrier, due to
+  LOCK prefix.
+*/
+# define os_atomic_test_and_set_byte_release(ptr, new_val) \
+	__sync_lock_test_and_set(ptr, (byte) new_val)
+#endif
+/*
+  os_atomic_test_and_set_byte_acquire() is a full memory barrier on x86. But
+  in general, just an aquire barrier should be sufficient. */
+# define os_atomic_test_and_set_byte_acquire(ptr, new_val) \
 	__sync_lock_test_and_set(ptr, (byte) new_val)
 
 #elif defined(HAVE_IB_SOLARIS_ATOMICS)
@@ -360,7 +397,9 @@ amount of increment. */
 /**********************************************************//**
 Returns the old value of *ptr, atomically sets *ptr to new_val */
 
-# define os_atomic_test_and_set_byte(ptr, new_val) \
+# define os_atomic_test_and_set_byte_acquire(ptr, new_val) \
+	atomic_swap_uchar(ptr, new_val)
+# define os_atomic_test_and_set_byte_release(ptr, new_val) \
 	atomic_swap_uchar(ptr, new_val)
 
 #elif defined(HAVE_WINDOWS_ATOMICS)
@@ -408,12 +447,58 @@ Returns the old value of *ptr, atomically sets *ptr to new_val.
 InterlockedExchange() operates on LONG, and the LONG will be
 clobbered */
 
-# define os_atomic_test_and_set_byte(ptr, new_val) \
+# define os_atomic_test_and_set_byte_acquire(ptr, new_val) \
+	((byte) InterlockedExchange(ptr, new_val))
+# define os_atomic_test_and_set_byte_release(ptr, new_val) \
 	((byte) InterlockedExchange(ptr, new_val))
 
 #else
 # define IB_ATOMICS_STARTUP_MSG \
 	"Mutexes and rw_locks use InnoDB's own implementation"
+#endif
+
+/** barrier definitions for memory ordering */
+#ifdef HAVE_IB_GCC_ATOMIC_THREAD_FENCE
+# define HAVE_MEMORY_BARRIER
+# define os_rmb	__atomic_thread_fence(__ATOMIC_ACQUIRE)
+# define os_wmb	__atomic_thread_fence(__ATOMIC_RELEASE)
+# define os_mb __atomic_thread_fence(__ATOMIC_SEQ_CST)
+
+# define IB_MEMORY_BARRIER_STARTUP_MSG \
+	"GCC builtin __atomic_thread_fence() is used for memory barrier"
+
+#elif defined(HAVE_IB_GCC_SYNC_SYNCHRONISE)
+# define HAVE_MEMORY_BARRIER
+# define os_rmb	__sync_synchronize()
+# define os_wmb	__sync_synchronize()
+# define os_mb	__sync_synchronize()
+# define IB_MEMORY_BARRIER_STARTUP_MSG \
+	"GCC builtin __sync_synchronize() is used for memory barrier"
+
+#elif defined(HAVE_IB_MACHINE_BARRIER_SOLARIS)
+# define HAVE_MEMORY_BARRIER
+# include <mbarrier.h>
+# define os_rmb	__machine_r_barrier()
+# define os_wmb	__machine_w_barrier()
+# define os_mb __machine_rw_barrier()
+# define IB_MEMORY_BARRIER_STARTUP_MSG \
+	"Soralis memory ordering functions are used for memory barrier"
+
+#elif defined(HAVE_WINDOWS_MM_FENCE)
+# define HAVE_MEMORY_BARRIER
+# include <intrin.h>
+# define os_rmb	_mm_lfence()
+# define os_wmb	_mm_sfence()
+# define os_mb	_mm_mfence()
+# define IB_MEMORY_BARRIER_STARTUP_MSG \
+	"_mm_lfence() and _mm_sfence() are used for memory barrier"
+
+#else
+# define os_rmb do { } while(0)
+# define os_wmb do { } while(0)
+# define os_mb do { } while(0)
+# define IB_MEMORY_BARRIER_STARTUP_MSG \
+	"Memory barrier is not used"
 #endif
 
 #ifndef UNIV_NONINL

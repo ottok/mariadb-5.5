@@ -184,6 +184,9 @@ public:
     enum { CLOSED, OPENING, OPENED, CLOSING, ERROR } m_state;
     int m_error;
     int m_initialize_count;
+
+    uint n_rec_per_key;
+    uint64_t *rec_per_key;
 };
 
 typedef struct st_filter_key_part_info {
@@ -251,6 +254,7 @@ private:
     uint64_t bulk_fetch_iteration;
     uint64_t rows_fetched_using_bulk_fetch;
     bool doing_bulk_fetch;
+    bool maybe_index_scan;
 
     //
     // buffer used to temporarily store a "packed key" 
@@ -755,7 +759,9 @@ public:
         uchar* buf,
         DBT* key_to_compare
         );
-
+#if TOKU_INCLUDE_ROW_TYPE_COMPRESSION
+    enum row_type get_row_type() const;
+#endif
 private:
     int read_full_row(uchar * buf);
     int __close();
@@ -796,6 +802,19 @@ private:
 private:
     int do_optimize(THD *thd);
     int map_to_handler_error(int error);
+
+public:
+    void rpl_before_write_rows();
+    void rpl_after_write_rows();
+    void rpl_before_delete_rows();
+    void rpl_after_delete_rows();
+    void rpl_before_update_rows();
+    void rpl_after_update_rows();
+    bool rpl_lookup_rows();
+private:
+    bool in_rpl_write_rows;
+    bool in_rpl_delete_rows;
+    bool in_rpl_update_rows;
 };
 
 #if TOKU_INCLUDE_OPTION_STRUCTS

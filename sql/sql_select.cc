@@ -3618,6 +3618,7 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
   join->impossible_where= false;
   if (conds && const_count)
   { 
+    COND_EQUAL *orig_cond_equal = join->cond_equal;
     conds->update_used_tables();
     conds= remove_eq_conds(join->thd, conds, &join->cond_value);
     if (conds && conds->type() == Item::COND_ITEM &&
@@ -3644,7 +3645,21 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
         join->cond_equal->current_level.empty();
         join->cond_equal->current_level.push_back((Item_equal*) conds);
       }
-    }     
+    }
+
+    if (orig_cond_equal != join->cond_equal)
+    {
+      /*
+        If join->cond_equal has changed all references to it from COND_EQUAL
+        objects associated with ON expressions must be updated.
+      */
+      for (JOIN_TAB **pos=stat_vector+const_count ; (s= *pos) ; pos++) 
+      {
+        if (*s->on_expr_ref && s->cond_equal &&
+	    s->cond_equal->upper_levels == orig_cond_equal)
+          s->cond_equal->upper_levels= join->cond_equal;
+      }
+    }
   }
 
   /* Calc how many (possible) matched records in each table */
@@ -8178,6 +8193,9 @@ static bool create_ref_for_key(JOIN *join, JOIN_TAB *j,
   }
   else
     j->type=JT_EQ_REF;
+
+  j->read_record.unlock_row= (j->type == JT_EQ_REF)? 
+                             join_read_key_unlock_row : rr_unlock_row; 
   DBUG_RETURN(0);
 }
 
@@ -9202,6 +9220,25 @@ uint get_next_field_for_derived_key(uchar *arg)
 }
 
 
+static
+uint get_next_field_for_derived_key_simple(uchar *arg)
+{
+  KEYUSE *keyuse= *(KEYUSE **) arg;
+  if (!keyuse)
+    return (uint) (-1);
+  TABLE *table= keyuse->table;
+  uint key= keyuse->key;
+  uint fldno= keyuse->keypart; 
+  for ( ; 
+        keyuse->table == table && keyuse->key == key && keyuse->keypart == fldno;
+        keyuse++)
+    ;
+  if (keyuse->key != key)
+    keyuse= 0;
+  *((KEYUSE **) arg)= keyuse;
+  return fldno;
+}
+
 static 
 bool generate_derived_keys_for_table(KEYUSE *keyuse, uint count, uint keys)
 {
@@ -9232,12 +9269,28 @@ bool generate_derived_keys_for_table(KEYUSE *keyuse, uint count, uint keys)
     }
     else
     {
-      if (table->add_tmp_key(table->s->keys, parts, 
-                             get_next_field_for_derived_key, 
-                             (uchar *) &first_keyuse,
-                             FALSE))
-        return TRUE;
-      table->reginfo.join_tab->keys.set_bit(table->s->keys);
+      KEYUSE *save_first_keyuse= first_keyuse;
+      if (table->check_tmp_key(table->s->keys, parts,
+                               get_next_field_for_derived_key_simple, 
+                               (uchar *) &first_keyuse))
+ 
+      {
+        first_keyuse= save_first_keyuse;
+        if (table->add_tmp_key(table->s->keys, parts, 
+                               get_next_field_for_derived_key, 
+                               (uchar *) &first_keyuse,
+                               FALSE))
+          return TRUE;
+        table->reginfo.join_tab->keys.set_bit(table->s->keys);
+      }
+      else
+      {
+        /* Mark keyuses for this key to be excluded */
+        for (KEYUSE *curr=save_first_keyuse; curr < keyuse; curr++)
+	{
+          curr->key= MAX_KEY;
+        }
+      }
       first_keyuse= keyuse;
       key_count++;
       parts= 0;
@@ -9837,6 +9890,19 @@ uint check_join_cache_usage(JOIN_TAB *tab,
   }
     
   /*
+    Don't use BKA for materialized tables. We could actually have a
+    meaningful use of BKA when linked join buffers are used.
+
+    The problem is, the temp.table is not filled (actually not even opened
+    properly) yet, and this doesn't let us call
+    handler->multi_range_read_info(). It is possible to come up with
+    estimates, etc. without acessing the table, but it seems not to worth the
+    effort now.
+  */
+  if (tab->table->pos_in_table_list->is_materialized_derived())
+    no_bka_cache= true;
+
+  /*
     Don't use join buffering if we're dictated not to by no_jbuf_after
     (This is not meaningfully used currently)
   */
@@ -9902,7 +9968,7 @@ uint check_join_cache_usage(JOIN_TAB *tab,
     if (tab->ref.is_access_triggered())
       goto no_join_cache;
       
-    if (!tab->is_ref_for_hash_join())
+    if (!tab->is_ref_for_hash_join() && !no_bka_cache)
     {
       flags= HA_MRR_NO_NULL_ENDPOINTS | HA_MRR_SINGLE_POINT;
       if (tab->table->covering_keys.is_set(tab->ref.key))
@@ -12364,10 +12430,18 @@ Item *eliminate_item_equal(COND *cond, COND_EQUAL *upper_levels,
     if (upper)
     {
       TABLE_LIST *native_sjm= embedding_sjm(item_equal->context_field);
-      if (item_const && upper->get_const())
+      Item *upper_const= upper->get_const();
+      if (item_const && upper_const)
       {
-        /* Upper item also has "field_item=const". Don't produce equality here */
-        item= 0;
+        /* 
+          Upper item also has "field_item=const".
+          Don't produce equality if const is equal to item_const.
+        */
+        Item_func_eq *func= new Item_func_eq(item_const, upper_const);
+        func->set_cmp_func();
+        func->quick_fix_field();
+        if (func->val_int())
+          item= 0;
       }
       else
       {
@@ -20390,7 +20464,7 @@ find_order_in_list(THD *thd, Item **ref_pointer_array, TABLE_LIST *tables,
                order_item->full_name(), thd->where);
       return TRUE;
     }
-    order->item= ref_pointer_array + count - 1;
+    thd->change_item_tree((Item**)&order->item, (Item*)(ref_pointer_array + count - 1));
     order->in_field_list= 1;
     order->counter= count;
     order->counter_used= 1;
@@ -20423,7 +20497,7 @@ find_order_in_list(THD *thd, Item **ref_pointer_array, TABLE_LIST *tables,
         order_item_type == Item::REF_ITEM)
     {
       from_field= find_field_in_tables(thd, (Item_ident*) order_item, tables,
-                                       NULL, &view_ref, IGNORE_ERRORS, TRUE,
+                                       NULL, &view_ref, IGNORE_ERRORS, FALSE,
                                        FALSE);
       if (!from_field)
         from_field= (Field*) not_found_field;

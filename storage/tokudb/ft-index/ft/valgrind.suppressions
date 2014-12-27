@@ -281,3 +281,14 @@
    fun:_dl_start
    obj:/lib/x86_64-linux-gnu/ld-2.17.so
 }
+{
+    <ld_is_not_clean_on_arch_linux_june_2014>
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:calloc
+    ...
+    fun:dlsym
+    ...
+    fun:_dl_init
+}
+

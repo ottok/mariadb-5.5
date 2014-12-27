@@ -1,8 +1,8 @@
-revision-id: sergii@pisem.net-20140803113854-ku86z409wqigl8s6
-date: 2014-08-03 13:38:54 +0200
-build-date: 2014-08-03 14:00:45 +0200
-revno: 4264
+revision-id: sergii@pisem.net-20141219104403-wo7bvoif9zii3ie5
+date: 2014-12-19 11:44:03 +0100
+build-date: 2014-12-19 11:57:35 +0100
+revno: 4393
 branch-nick: 5.5
 
 
-MySQL source 5.5.39
+MySQL source 5.5.41
