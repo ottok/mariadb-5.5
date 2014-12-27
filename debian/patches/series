@@ -1,6 +1,3 @@
-20_kfreebsd_tests.diff
-21_kfreebsd-peercred.diff
-22_hppa_invalid_operands.diff
 33_scripts__mysql_create_system_tables__no_test.diff
 38_scripts__mysqld_safe.sh__signals.diff
 41_scripts__mysql_install_db.sh__no_test.diff
@@ -9,5 +6,4 @@
 61_replace_dash_with_bash_mbug675185.diff
 75_man_syntax_fixes.diff
 82_extend_default_test_timeout_for_tokudb.diff
-90_spelling.diff
 99_remove_rename_mariadb-server_files_in.diff
