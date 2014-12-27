@@ -81,7 +81,7 @@ for i in `ls $DATADIR/debian-*.flag 2>/dev/null`; do
 done
 if [ "$show_downgrade_warning" = 1 ]; then
   db_fset mariadb-server-5.5/really_downgrade seen false || true
-  db_input medium mariadb-server-5.5/really_downgrade || true
+  db_input critical mariadb-server-5.5/really_downgrade || true
   db_go
   db_get mariadb-server-5.5/really_downgrade || true
   if [ "$RET" = "true" ]; then
