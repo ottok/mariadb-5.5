@@ -13,7 +13,7 @@ Build-Depends: bison,
                dh-apparmor,
                hardening-wrapper,
                libaio-dev [linux-any],
-               libjemalloc-dev [linux-any],
+               libjemalloc-dev (>= 3.0.0) [linux-any],
                libncurses5-dev (>= 5.0-6),
                libpam0g-dev,
                libreadline-gplv2-dev,
@@ -26,8 +26,8 @@ Build-Depends: bison,
                zlib1g-dev (>= 1:1.1.3-5)
 Standards-Version: 3.9.5
 Homepage: http://mariadb.org/
-Vcs-Git: git://git.debian.org/git/pkg-mysql/mariadb-5.5.git
-Vcs-Browser: http://git.debian.org/?p=pkg-mysql/mariadb-5.5.git
+Vcs-Git: git://anonscm.debian.org/pkg-mysql/mariadb-5.5.git
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-mysql/mariadb-5.5.git
 
 Package: libmariadbclient18
 Section: libs
@@ -126,8 +126,16 @@ Depends: debianutils (>=1.6),
          ${shlibs:Depends}
 Recommends: libdbd-mysql-perl (>= 1.2202)
 Conflicts: mysql-client-core-5.5, mysql-client-core-5.6
-Breaks: mysql-client, mysql-client-5.5, mysql-client-5.6, virtual-mysql-client
-Replaces: mysql-client, mysql-client-5.5, mysql-client-5.6, virtual-mysql-client
+Breaks: mariadb-server-5.5 (<< ${source:Version}),
+        mysql-client,
+        mysql-client-5.5,
+        mysql-client-5.6,
+        virtual-mysql-client
+Replaces: mariadb-server-5.5 (<< ${source:Version}),
+          mysql-client,
+          mysql-client-5.5,
+          mysql-client-5.6,
+          virtual-mysql-client
 Provides: virtual-mysql-client
 Description: MariaDB database client binaries
  MariaDB is a fast, stable and true multi-user, multi-threaded SQL database
@@ -186,8 +194,7 @@ Architecture: any
 Suggests: mailx, mariadb-test, tinyca
 Recommends: libhtml-template-perl
 Pre-Depends: adduser (>= 3.40), debconf, mariadb-common
-Depends: bsdutils,
-         libdbi-perl,
+Depends: libdbi-perl,
          lsb-base (>= 3.0-10),
          mariadb-client-5.5 (>= ${source:Version}),
          mariadb-server-core-5.5 (>= ${binary:Version}),

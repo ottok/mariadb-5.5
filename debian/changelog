@@ -1,3 +1,17 @@
+mariadb-5.5 (5.5.41-0ubuntu0.14.10.1) utopic-updates; urgency=low
+
+  * New upstream release
+  * Sync packaging with latest 5.5 in Debian to fix multiple small issues
+  * Updated Dutch translation by Frans Spiesschaert
+  * Updated control file so that mariadb-client-5.5 breaks and replaces
+    the package mariadb-server-5.5 to allow overwriting the innochecksum
+    man page file which has changed location (LP: #1368124) as per
+    doc https://www.debian.org/doc/debian-policy/ch-relationships.html#s7.6.1
+  * Backported the fix of #770177 from 10.0 to 5.5 so that the migration
+    question will not be asked repeatedly. (LP: #1392539)
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Mon, 29 Dec 2014 00:45:02 +0200
+
 mariadb-5.5 (5.5.40-0ubuntu0.14.10.1) utopic-security; urgency=medium
 
   * SECURITY UPDATE: Update to 5.5.40 to fix security issues (LP: #1391676)
