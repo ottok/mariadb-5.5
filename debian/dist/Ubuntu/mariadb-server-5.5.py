@@ -4,7 +4,6 @@
 Author: Mathias Gug <mathias.gug@canonical.com>
 '''
 
-from __future__ import print_function, unicode_literals
 import os, os.path
 
 from apport.hookutils import *
@@ -30,23 +29,24 @@ def add_info(report):
                 report[key] += line + '\n'
         except IndexError:
             continue
-    if os.path.exists('/var/log/mysql/error.log'):
-        key = 'Logs' + path_to_key('/var/log/mysql/error.log')
-        report[key] = ""
-        for line in read_file('/var/log/mysql/error.log').split('\n'):
-            report[key] += line + '\n'
-    attach_mac_events(report, '/usr/sbin/mysqld')
-    attach_file(report,'/etc/apparmor.d/usr.sbin.mysqld')
+    key = 'Logs' + path_to_key('/var/log/kern.log')
+    report[key] = ""
+    for line in read_file('/var/log/kern.log').split('\n'):
+        try:
+            if '/usr/sbin/mysqld' in string.join(line.split()[4:]):
+                report[key] += line + '\n'
+        except IndexError:
+            continue
     _add_my_conf_files(report, '/etc/mysql/my.cnf')
     for f in os.listdir('/etc/mysql/conf.d'):
         _add_my_conf_files(report, os.path.join('/etc/mysql/conf.d', f))
     try:
-        report['MySQLVarLibDirListing'] = str(os.listdir('/var/lib/mysql'))
+        report['MySQLVarLibDirListing'] = unicode(os.listdir('/var/lib/mysql'))
     except OSError:
-        report['MySQLVarLibDirListing'] = str(False)
+        report['MySQLVarLibDirListing'] = unicode(False)
 
 if __name__ == '__main__':
     report = {}
     add_info(report)
     for key in report:
-        print('%s: %s' % (key, report[key].split('\n', 1)[0]))
+        print '%s: %s' % (key, report[key].split('\n', 1)[0])

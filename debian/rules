@@ -16,11 +16,6 @@ ifneq (,$(filter $(ARCH), i386 kfreebsd-i386 hurd-i386))
     TAOCRYPT_OPT="-DTAOCRYPT_DISABLE_X86ASM"
 endif
 
-# Skip TokuDB if arch is not amd64
-ifneq ($(ARCH), amd64)
-    TOKUDB_OPT:=-DWITHOUT_TOKUDB=true
-endif
-
 export MYSQL_BUILD_CC=$(DEB_HOST_GNU_TYPE)-gcc
 export MYSQL_BUILD_CXX=$(DEB_HOST_GNU_TYPE)-g++
 
@@ -33,22 +28,6 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 DISTRIBUTION := $(shell lsb_release -i -s)
 RELEASE := $(shell lsb_release -r -s)
-
-# Parallel build support as adviced
-# at https://www.debian.org/doc/debian-policy/ch-source.html#s-debianrules-options
-ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-    NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-    # Placeholder code to implement max cpu count value checking
-    # if [$(NUMJOBS) > $(shell if [ -f /proc/cpuinfo ] ; then grep -c processor.* /proc/cpuinfo ; else echo 1 ; fi)]
-    #  then NUMJOBS = 0
-    # fi
-    MAKEFLAGS += -j $(NUMJOBS)
-endif
-
-# Add support for verbose builds
-ifneq (,$(filter verbose,$(DEB_BUILD_OPTIONS)))
-    MAKEFLAGS += VERBOSE=1
-endif
 
 MAKE_TEST_TARGET:=test-force
 ifneq ($(findstring fulltest,$(DEB_BUILD_OPTIONS)),)
@@ -83,21 +62,18 @@ override_dh_auto_clean:
 	dh_testroot
 	[ ! -d mysql-test/var ] || rm -rf mysql-test/var
 	rm -rf $(BUILDDIR)
-	debconf-updatepo # Update po-files when clean runs before each build
+	debconf-updatepo
+
+override_dh_auto_configure: configure-stamp
 
 override_dh_prep:
         # Don't clean /tmp/ away, it is needed by all binary packages
 
-override_dh_auto_configure:
+# We explicitly set -DINSTALL_SUPPORTFILESDIR as it is incorrect in upstream
+# sources (will be fixed in 5.5.30).
+configure-stamp:
 	@echo "RULES.$@"
 	dh_testdir
-	
-	# Versioned symbols are only available on Linux.
-	# Remove symbols file on kFreeBSD builds so that
-	# dpkg-gensymbols will not fail the build.
-ifneq (,$(filter $(ARCH), kfreebsd-i386 kfreebsd-amd64))
-	rm debian/libmariadbclient18.symbols
-endif
 	
 	# Rename shared libraries SONAME and filenames
 	# libmysqlclient18.so > libmariadbclient18.so etc
@@ -110,45 +86,56 @@ endif
 	# Neither does RPM packaging related files or comments in other code need sedding.
 	
 	( test -d $(builddir) || mkdir $(builddir) ) && cd $(builddir) && \
-	sh -c  'PATH=$${MYSQL_BUILD_PATH:-"/usr/local/bin:/usr/bin:/bin"} \
+	sh -c  'PATH=$${MYSQL_BUILD_PATH:-"/bin:/usr/bin"} \
 	    	CC=$${MYSQL_BUILD_CC:-gcc} \
 		CFLAGS=$${MYSQL_BUILD_CFLAGS:-"-O2 -DBIG_JOINS=1 -fno-strict-aliasing ${TAOCRYPT_OPT}"} \
 	    	CXX=$${MYSQL_BUILD_CXX:-g++} \
 	    	CXXFLAGS=$${MYSQL_BUILD_CXXFLAGS:-"-O3 -DBIG_JOINS=1 -felide-constructors -fno-exceptions -fno-rtti -fno-strict-aliasing ${TAOCRYPT_OPT}"} \
 	    cmake -DCMAKE_INSTALL_PREFIX=/usr \
-	    $(USE_STATIC_MYSQLD) \
-	    -$(MAKEFLAGS) \
-	    $(TOKUDB_OPT) \
+		$(USE_STATIC_MYSQLD) \
 	    -DCOMPILATION_COMMENT="($(DISTRIBUTION))" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEBVERSION)" \
 	    -DSYSTEM_TYPE="debian-$(DEB_BUILD_GNU_SYSTEM)" \
+	    -DWITHOUT_TOKUDB=true \
 	    -DBUILD_CONFIG=mysql_release \
 	    -DINSTALL_LIBDIR=lib/$(DEB_HOST_MULTIARCH) \
 	    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
+	    -DINSTALL_SUPPORTFILESDIR=share/mysql \
 		-DDEB=1 ..'
 	touch $@
 
-# This is needed, otherwise 'make test' will run before binaries have been built
-override_dh_auto_build:
+# Disable TokuDB above due to
+# * i386 does not work and CMakeLists.txt check for processor does not detect
+#   correct ARCH in chroot
+# * Build errors in Trusty: https://mariadb.atlassian.net/browse/MDEV-5618
+# * There was ugly code in CMakeLists.txt that touched stuff in debian/*
+#   that needs to be re-written
+
+override_dh_auto_build: build-stamp
+
+build-stamp:
 	@echo "RULES.$@"
-	cd $(builddir) && $(MAKE)
+	cd $(builddir) && $(MAKE) $(AM_EXTRA_MAKEFLAGS)
 	touch $@
 
 override_dh_auto_test:
 	@echo "RULES.$@"
-ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+ifeq ($(findstring nocheck,$(DEB_BUILD_OPTIONS)),)
 	cd $(builddir) && $(MAKE) $(MAKE_TEST_TARGET) || $(TESTSUITE_FAIL_CMD) ;
 endif
 
-override_dh_auto_install:
+override_dh_auto_install: auto_install-stamp
+
+auto_install-stamp:
 	@echo "RULES.$@"
 	dh_testdir
 	dh_testroot
 	
-	# If TokuDB plugin was built
-	# add it to the server install list.
-	[ ! -f $(BUILDDIR)/usr/lib/mysql/plugin/ha_tokudb.so ] || echo 'usr/lib/mysql/plugin/ha_tokudb.so\netc/mysql/conf.d/tokudb.cnf\nusr/bin/tokuftdump\nusr/share/doc/mariadb-server-5.5/README-TOKUDB\nusr/share/doc/mariadb-server-5.5/README.md' >> debian/mariadb-server-5.5.install
-	
+	# some self written manpages which hopefully
+	# gets overwritten sooner or later with upstreams
+	mkdir -p $(TMP)/usr/share/man/man1/
+	mkdir -p $(TMP)/usr/share/man/man8/
+	cp debian/additions/*.1 $(TMP)/usr/share/man/man1/
 	mkdir -p $(TMP)/etc/mysql/conf.d/
 	cp debian/additions/mysqld_safe_syslog.cnf $(TMP)/etc/mysql/conf.d/
 	
@@ -172,6 +159,11 @@ override_dh_auto_install:
 	install -d $(TMP)/etc/mysql/conf.d
 	install -m 0644 debian/additions/mariadb.cnf $(TMP)/etc/mysql/conf.d/mariadb.cnf
 	
+	# mariadb-client
+	install -m 0755 debian/additions/mysqlreport $(TMP)/usr/bin/
+	install -m 0755 debian/additions/innotop/innotop $(TMP)/usr/bin/
+	install -m 0644 debian/additions/innotop/innotop.1 $(TMP)/usr/share/man/man1/
+	
 	# mariadb-server
 	rm -vf $(TMP)/usr/share/mysql/mi_test_all* \
 	       $(TMP)/usr/share/mysql/mysql-log-rotate \
@@ -188,12 +180,6 @@ override_dh_auto_install:
 	install -m 0644 $(builddir)/Docs/INFO_SRC $(TMP)/usr/share/doc/mariadb-server-5.5/INFO_SRC
 	install -m 0644 $(builddir)/Docs/INFO_BIN $(TMP)/usr/share/doc/mariadb-server-5.5/INFO_BIN
 	
-	# install AppArmor profile
-	install -D -m 644 debian/apparmor-profile $(TMP)/etc/apparmor.d/usr.sbin.mysqld
-	
-	# install Apport hook
-	install -D -m 644 debian/mariadb-server-5.5.py $(TMP)/usr/share/apport/package-hooks/source_mariadb-5.5.py
-	
 	# mariadb-test
 	mv $(TMP)/usr/mysql-test $(TMP)/usr/share/mysql
 	touch $@
@@ -208,6 +194,14 @@ override_dh_installinit-arch:
 
 override_dh_installcron-arch:
 	dh_installcron --name mysql-server
+
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
+
+binary:	binary-indep binary-arch
+
+get-orig-source:
+	uscan --force-download --verbose
 
 %:
 	dh $@ --parallel

@@ -1,78 +1,50 @@
-mariadb-5.5 (5.5.41-1) unstable; urgency=low
+mariadb-5.5 (5.5.40-0ubuntu0.14.04.1) trusty-security; urgency=medium
 
-  * New upstream release
+  * SECURITY UPDATE: Update to 5.5.40 to fix security issues (LP: #1391676)
+    - CVE-2014-6507
+    - CVE-2014-6491
+    - CVE-2014-6500
+    - CVE-2014-6469
+    - CVE-2014-6555
+    - CVE-2014-6559
+    - CVE-2014-6494
+    - CVE-2014-6496
+    - CVE-2014-6464
+  * Add bsdutils as mariadb-server dependency like upstream does in 5.5.40.
 
- -- Otto Kekäläinen <otto@seravo.fi>  Sat, 27 Dec 2014 15:59:46 +0200
+ -- Otto Kekäläinen <otto@seravo.fi>  Wed, 12 Oct 2014 01:04:24 +0200
 
-mariadb-5.5 (5.5.39-3) UNRELEASED; urgency=low
+mariadb-5.5 (5.5.39-0ubuntu0.14.04.1) trusty-security; urgency=medium
 
-  * Updated Dutch translation by Frans Spiesschaert (Closes: #764010)
-  * Updated control file so that mariadb-client-5.5 breaks and replaces
-    the package mariadb-server-5.5 to allow overwriting the innochecksum
-    man page file which has changed location (LP: #1368124) as per
-    doc https://www.debian.org/doc/debian-policy/ch-relationships.html#s7.6.1
-  * Backported the fix of #770177 from 10.0 to 5.5 so that the migration
-    question will not be asked repeatedly.
+  * SECURITY UPDATE: Update to 5.5.39 to fix security issues (LP: #1363222)
+    * 5.5.39
+      - Fixes an error when handling MyISAM temporary files can be
+        exploited to execute arbitrary code (Secunia Advisory SA60599)
+    * 5.5.38
+      - CVE-2014-2494
+      - CVE-2014-4207
+      - CVE-2014-4243
+      - CVE-2014-4258
+      - CVE-2014-4260
+  * Import a few important packaging bug fixes available in Debian
 
- -- Otto Kekäläinen <otto@seravo.fi>  Sat, 04 Oct 2014 22:45:02 +0300
+ -- Otto Kekäläinen <otto@seravo.fi>  Fri, 29 Aug 2014 23:04:24 +0300
 
-mariadb-5.5 (5.5.39-2) unstable; urgency=low
+mariadb-5.5 (5.5.37-0ubuntu0.14.04.1) trusty-security; urgency=medium
 
-  * d/control: Removed Provides: libmysqlclient-dev (Closes: #759309)
-  * d/control: Removed Provides: libmysqld-dev with same motivation
-  * Re-introduced tha HPPA build patch as the upstream fix wasn't complete
-  * Fixed all kFreeBSD build and test suite issues
-  * Added Italian translation (Closes: #759813)
-  * Set migration option as unseen if installation was aborted (Closes: #761452)
+  * SECURITY UPDATE: Update to 5.5.37 to fix security issues (LP: #1313187)
+    - http://www.oracle.com/technetwork/topics/security/cpuapr2014-1972952.html
+    - CVE-2014-0001
+    - CVE-2014-0384
+    - CVE-2014-2419
+    - CVE-2014-2430
+    - CVE-2014-2431
+    - CVE-2014-2432
+    - CVE-2014-2436
+    - CVE-2014-2438
+    - CVE-2014-2440
 
- -- Otto Kekäläinen <otto@seravo.fi>  Wed, 27 Aug 2014 21:12:36 +0300
-
-mariadb-5.5 (5.5.39-1) unstable; urgency=low
-
-  * New upstream release.
-    * Fixes an error when handling MyISAM temporary files can be
-      exploited to execute arbitrary code (Secunia Advisory SA60599)
-  * Add patch to fix kFreeBSD builds
-  * Fixed wrongly applied fix of MDEV-5957 (Closes: #752203)
-
- -- Otto Kekäläinen <otto@seravo.fi>  Thu, 07 Aug 2014 12:16:19 +0300
-
-mariadb-5.5 (5.5.38-1) unstable; urgency=low
-
-  * New upstream release.
-  * Added upstream release signing key in preparation for future use
-  * Made libterm-readkey-perl a depends instead of suggest (LP: #1324082)
-  * Add patch to fix HPPA build error (Closes: #751805)
-  * Fixed lots and lots of Lintian warnings
-  * Disabled TokuDB (Closes: #753222). Remember to re-enable if once
-    https://mariadb.atlassian.net/browse/MDEV-6449 is closed.
-  * Add in retrospect corresponding MariaDB CVEs for
-    Oracle SPU July 2014 (Closes: #754940)
-    - CVE-2014-2494
-    - CVE-2014-4207
-    - CVE-2014-4243
-    - CVE-2014-4258
-    - CVE-2014-4260
-
- -- Otto Kekäläinen <otto@seravo.fi>  Tue, 17 Jun 2014 16:24:35 +0300
-
-mariadb-5.5 (5.5.37-1) unstable; urgency=low
-
-  * New upstream release, fixing the following security issues:
-    * Corresponding MariaDB CVEs for Oracle SPU April 2014 (Closes: #745330)
-      - CVE-2014-0384
-      - CVE-2014-2419
-      - CVE-2014-2430
-      - CVE-2014-2431
-      - CVE-2014-2432
-      - CVE-2014-2436
-      - CVE-2014-2438
-      - CVE-2014-2440
-  * Re-enabled TokuDB with "if arch amd64" in d/rules
-  * Applied patch to log init output better
-    (Closes https://mariadb.atlassian.net/browse/MDEV-5957)
-
- -- Otto Kekäläinen <otto@seravo.fi>  Thu, 17 Apr 2014 20:55:22 +0300
+ -- Otto Kekäläinen <otto@seravo.fi>  Mon, 28 Apr 2014 09:55:22 +0300
 
 mariadb-5.5 (5.5.36-1) unstable; urgency=low
 

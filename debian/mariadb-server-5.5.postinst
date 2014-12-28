@@ -98,7 +98,7 @@ removed your symlink (see #182747 and others).  the mysql packages noticed
 that this happened, and as a workaround have restored it.  however, because
 /var/lib/mysql seems to have been re-created in the meantime, and because
 we don't want to rm -rf something we don't know as much about, we are going
-to leave this unexpected directory here. If your database looks normal,
+to leave this unexpected directory here.  If your database looks normal,
 and this is not a symlink to your database, you should be able to blow
 this all away.
 
@@ -120,7 +120,6 @@ EOF
     set +e
     chown -R 0:0 $mysql_datadir
     chown -R mysql $mysql_statedir
-    chown -R mysql $mysql_rundir
     chown -R mysql:adm $mysql_newlogdir;	chmod 2750 $mysql_newlogdir;
     for i in log err; do
       touch             $mysql_logdir/mysql.$i
@@ -134,8 +133,6 @@ EOF
     # data directory and then somewhen gets purged by the admin.
     db_set mysql-server/postrm_remove_database false || true
 
-    # Clean up old flags before setting new one
-    rm $mysql_statedir/debian-*.flag
     # To avoid downgrades.
     touch $mysql_statedir/debian-5.5.flag
 
@@ -143,12 +140,12 @@ EOF
     # This will fail if we are upgrading an existing database; in this case
     # mysql_upgrade, called from the /etc/init.d/mysql start script, will
     # handle things.
-    # Debian: beware of the bashisms...
-    # Debian: can safely run on upgrades with existing databases
+    # Debian: beware of the bashisms... 
+    # Debian: can safely run on upgrades with existing databases 
     set +e
-    bash /usr/bin/mysql_install_db --rpm --user=mysql 2>&1 | $ERR_LOGGER
+    /bin/bash /usr/bin/mysql_install_db --rpm --user=mysql 2>&1 | $ERR_LOGGER
     set -e
-
+    
     ## On every reconfiguration the maintenance user is recreated.
     #
     # - It is easier to regenerate the password every time but as people
@@ -167,15 +164,13 @@ EOF
     #   the old query which always succeeds and then the new which may or may not.
 
     # recreate the credentials file if not present or without mysql_upgrade stanza
-    dc=$mysql_cfgdir/debian.cnf;
+    dc=$mysql_cfgdir/debian.cnf; 
     if [ -e "$dc" -a -n "`fgrep mysql_upgrade $dc 2>/dev/null`" ]; then
         pass="`sed -n 's/^[     ]*password *= *// p' $dc | head -n 1`"
     else
 	pass=`perl -e 'print map{("a".."z","A".."Z",0..9)[int(rand(62))]}(1..16)'`;
         if [ ! -d "$mysql_cfgdir" ]; then install -o 0 -g 0 -m 0755 -d $mysql_cfgdir; fi
-        umask 066
         cat /dev/null > $dc
-        umask 022
         echo "# Automatically generated for Debian scripts. DO NOT TOUCH!" >>$dc
         echo "[client]"                                                    >>$dc
         echo "host     = localhost"                                        >>$dc
@@ -195,10 +190,10 @@ EOF
 
     # update privilege tables
     password_column_fix_query=`/bin/echo -e \
-        "USE mysql;\n" \
-        "ALTER TABLE user CHANGE Password Password char(41) character set latin1 collate latin1_bin DEFAULT '' NOT NULL;"`
+        "USE mysql\n" \
+        "ALTER TABLE user CHANGE Password Password char(41) character set latin1 collate latin1_bin DEFAULT '' NOT NULL"`;
     replace_query=`/bin/echo -e \
-        "USE mysql;\n" \
+        "USE mysql\n" \
         "SET sql_mode='';\n" \
         "REPLACE INTO user SET " \
         "  host='localhost', user='debian-sys-maint', password=password('$pass'), " \
