@@ -1,6 +1,9 @@
 # These are OK for -dev package
 libmariadbd-dev: package-name-doesnt-match-sonames libmysqld18
-libmariadbd-dev: no-shlibs-control-file usr/lib/x86_64-linux-gnu/libmysqld.so.18
+# OK, embedded has same source
 libmariadbd-dev: embedded-library usr/lib/x86_64-linux-gnu/libmysqld.so.18: libmysqlclient
-# OK, newer Debian should support xz
-libmariadbd-dev: data.tar.xz-member-without-dpkg-pre-depends
+libmariadbd-dev: embedded-library usr/lib/i386-linux-gnu/libmysqld.so.18: libmysqlclient
+# OK, this is in fact a dev package
+# but for soname libmysqlclient
+# (due to upstream reasons)
+libmariadbd-dev: non-dev-pkg-with-shlib-symlink usr/lib/x86_64-linux-gnu/libmysqld.so.18 usr/lib/x86_64-linux-gnu/libmysqld.so

@@ -1,4 +1,32 @@
-Tip:
+# README for Debian package maintainers #
+
+This file mostly applies to how the packaging workflow works for the official Debian packages, but it may contain useful information also for anybody doing their own private .deb builds.
+
+
+## Building from sources with git-buildpackage ##
+
+Clone sources with all branches
+  sudo apt-get install git-buildpackage
+  gbp-clone --pristine-tar git://git.debian.org/git/pkg-mysql/mariadb-5.5.git
+
+Aalternatively use Github mirror at https://github.com/ottok/mariadb-5.5.git
+
+On later runs make sure to have latest version of sources
+  gbp-pull --pristine-tar --force
+
+Install all build dependencies manually (see debian/control for latest full list)
+  sudo apt-get install bison chrpath cmake debhelper hardening-wrapper libaio-dev libboost-dev libjemalloc-dev libjudy-dev libncurses5-dev libpam0g-dev libreadline-gplv2-dev libssl-dev libwrap0-dev lsb-release perl po-debconf psmisc zlib1g-dev
+
+Build
+  git-buildpackage --git-pristine-tar
+
+For a more elaborate setup with automatic build dependency installation and multi-target chroot usage check out how http://labs.seravo.fi/~otto/mariadb-repo/build.sh uses git-buildpackage with pbuilder.
+
+If the build fails the easiest way to clean up before a new run is
+  git clean -f -d && git reset --hard
+
+
+### Tip ###
 
   Don't run the mysql-test-run test suite as part of build.
   It takes a lot of time, and we will do a better test anyway in
@@ -6,4 +34,150 @@ Tip:
 
     export DEB_BUILD_OPTIONS="nocheck"
 
+  If you want to run the build in parallel on 2 CPUs and have verbose output, use:
+    export DEB_BUILD_OPTIONS="parallel=2 verbose"
+
+  The options above can also be combined freely to get required behaviour.
+
+
+## Importing initial sources from upstream the first fime ##
+
+Create repository
+  mkdir mariadb-5.5
+  cd mariadb-5.5
+  git init
+  git branch upstream
+  git-import-orig --pristine-tar ../../upstream/mariadb-5.5.36
+
+Fill in values prompted
+  What will be the source package name? [mariadb] mariadb-5.5
+  What is the upstream version? [5.5.36]
+
+Checkout master into working dir and finish up manually what needs to be done
+  git checkout master
+
+Eventually commit and push, build, test binaries, test packages etc..
+  git commit -m "Created Debian packaging using git-buildpackage for easy maintenance"
+  git push --all
+  git push --tags
+
+
+## Upgrading sources from upstream ##
+
+Upstream will publish maintenance releases at least 5 years after the major version release, and security updates are likely to come even after that as long as major distributions ship the version.
+
+See table at https://mariadb.com/kb/en/mariadb/development/mariadb-maintenance-policy/
+
+Release notes are available at https://mariadb.com/kb/en/mariadb/development/release-notes/
+
+
+### Steps to import new upstream version ###
+
+Download new source package
+  cd pkg-mariadb-5.5
+  uscan --verbose
+
+Enter git repostitory path and apply new sources
+  cd mariadb-5.5
+  git-import-orig --pristine-tar ../mariadb-5.5.36.tar.gz
+
+Generate new debian/changelog entry
+  dch -v 5.5.36-1 -D unstable
+
+Manually merge what needs to be done
+
+Commit and push
+  git commit -am "Merged with upstream 5.5.36"
+  git push --all; git push --all github
+  git push --tags; git push --tags github
+
+Note that in above if you want to sync to Github directly you need to have collaborator rights to the Github repo and you need to add it as a secondary remote location with:
+  git remote add origin git@github.com:ottok/mariadb-5.5.git
+
+To push to the git.debian.org repos you need to a member of the pkg-mysql team at Alioth. It does not matter which repository you push to, eventually they are synced with each other anyway.
+
+
+### Maintaining patches ###
+
+Test that the patches still apply by running:
+  export QUILT_PATCHES=debian/patches
+  quilt import
+  quilt push -a
+
+If there are any rejects, inspect the files and update the patches.
+
+### Maintaining symbols file for libmariadbclient18 et al ###
+
+Update symbols file:
+  dpkg-gensymbols -plibmariadbclient18 -Idebian/libmariadbclient18.symbols -Pdebian/libmariadbclient18 -edebian/libmariadbclient18/usr/lib/mysql/plugin/mysql_clear_password.so -edebian/libmariadbclient18/usr/lib/mysql/plugin/dialog.so -edebian/libmariadbclient18/usr/lib/x86_64-linux-gnu/libmariadbclient.so.18.0.0 > symbols.patch
+
+  patch debian/libmariadbclient18.symbols symbols.patch
+
+Finish it manually by e.g. making sure there are no '-1' file versions, upstream versions is enough. Finally remember to selectively commit:
+  git add debian/libmariadbclient18.symbols
+  git commit -m "Updated symbols file"
+
+
+### Maintaining debian/copyright ###
+
+First install packages: license-reconcile devscripts cdbs
+
+Check if licenses match
+  license-reconcile
+
+Create new copyright file
+  licensecheck --copyright -r . -c . | /usr/lib/cdbs/licensecheck2dep5 > /tmp/copyright
+
+..but you need to do lots of manual work to merge the new file with the old, as liscensecheck has a lot of cruft and the original copyright file already had those cleaned up.
+
+
+### Quality control ###
+
+Run wrap-and-sort to style contents in debian/*
+  wrap-and-sort
+
+Once packages are done check their quality with Lintian
+  lintian -EvIL +pedantic --color=always *.deb
+
+
+## Uploading to Ubuntu PPA for testing ##
+
+Make sure you have key ID set up in ~/.devscripts to avoid using -k parameter
+  DEBSIGN_KEYID=B7F7E4E1
+
+These are good to have as environment variables (replace values with your own)
+  DEBEMAIL="otto@seravo.fi"
+  DEBFULLNAME="Otto Kekäläinen"
+  export DEBEMAIL DEBFULLNAME
+
+The run the commands to automatically change version and upload
+  backportpackage -u ppa:mysql-ubuntu/mariadb -d precise -r *.dsc -S ~ppa1 -y
+
+## Uploading to Ubuntu security releases ##
+
+See examples with documented procedures:
+ * https://bugs.launchpad.net/ubuntu/+source/mariadb-5.5/+bug/1313187
+ * https://bugs.launchpad.net/ubuntu/+source/mariadb-5.5/+bug/1363222
+
+Probably the most optimal workflow would be to create a git branch (e.g. ubuntu-14.04) with custom gbp.conf and maintaining it by importing upstream in one commit, and updating changelog and other stuff, including refreshing patches in another commits, so that it would be easy to produce a patch file that Ubuntu security team can apply upon the mix of previous debian/ contents from Ubuntu archive and updated others from upstream. This would allow to use git-buildpackage to produce test builds instead of plain 'fakeroot dpkg-buildpackage'.
+
+## Comparison to other distributions ##
+
+For tracking security release information, finding solutions for build errors on many architechtures and for general quality control it can be useful to keep an eye on what packagers in other distributions do:
+
+Fedora:
+  * https://apps.fedoraproject.org/packages/mariadb/
+  * http://pkgs.fedoraproject.org/cgit/mariadb.git/
+OpenSUSE:
+  * https://build.opensuse.org/package/show/server:database/mariadb
+Arch Linux:
+  * https://projects.archlinux.org/svntogit/packages.git/?h=packages/mariadb
+Mageia:
+  * http://svnweb.mageia.org/packages/cauldron/mariadb/current/
+
+## Notes about hard to fix bugs ##
+
+The following issues at https://qa.debian.org/bls/packages/m/mariadb-5.5.html are due to a bug in GCC which has been reported to GCC and will become fixed eventually:
+  E array-bounds /??PKGBUILDDIR??/strings/decimal.c:300 (arm64, armel, armhf, i386, mips, mipsel, powerpc, ppc64el, sparc)
+  E array-bounds /??PKGBUILDDIR??/strings/decimal.c:496 (arm64, armel, armhf, i386, mips, mipsel, powerpc, ppc64el, sparc)
 
