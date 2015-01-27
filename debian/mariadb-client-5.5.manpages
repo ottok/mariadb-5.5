@@ -10,5 +10,5 @@ debian/tmp/usr/share/man/man1/mysqlimport.1
 debian/additions/mysqlreport.1
 debian/tmp/usr/share/man/man1/mysqlshow.1
 debian/tmp/usr/share/man/man1/mysqlslap.1
-debian/additions/mysql_tableinfo.1
 debian/tmp/usr/share/man/man1/mysql_waitpid.1
+debian/tmp/usr/share/man/man1/innochecksum.1

@@ -1,14 +1,13 @@
-# Italian (it) translation of debconf templates for mysql-dfsg-5.1
-# Copyright (C) 2009 Software in the Public Interest
-# This file is distributed under the same license as the mysql-dfsg-5.1 package.
-# Luca Monducci <luca.mo@tiscali.it>, 2006 - 2009.
+# Italian (it) translation of debconf templates for mariadb-5.5
+# This file is distributed under the same license as the mariadb-5.5 package.
+# Luca Monducci <luca.mo@tiscali.it>, 2006-2014.
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: mysql-dfsg-5.1 5.1.37 italian debconf templates\n"
+"Project-Id-Version: mariadb-5.5 5.5.39 italian debconf templates\n"
 "Report-Msgid-Bugs-To: mariadb-5.5@packages.debian.org\n"
 "POT-Creation-Date: 2013-09-09 12:48+0300\n"
-"PO-Revision-Date: 2009-08-08 11:03+0200\n"
+"PO-Revision-Date: 2014-08-30 18:35+0200\n"
 "Last-Translator: Luca Monducci <luca.mo@tiscali.it>\n"
 "Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
 "Language: it\n"
@@ -46,8 +45,8 @@ msgid ""
 "There is no guarantee that the version you're currently installing will be "
 "able to use the current databases."
 msgstr ""
-"Non è garantito che la versione che si sta installando sia in grado di usare "
-"i database presenti."
+"Non è garantito che la versione che sta per essere installata sia in grado "
+"di usare i database presenti."
 
 #. Type: note
 #. Description
@@ -62,8 +61,8 @@ msgid ""
 "Using MariaDB under NIS/YP requires a mysql user account to be added on the "
 "local system with:"
 msgstr ""
-"Per usare MariaDB con NIS/YP è necessario aggiungere al sistema locale un "
-"account utente per mysql con:"
+"Per usare MariaDB con NIS/YP è necessario aggiungere al sistema un account "
+"utente locale con nome mysql con:"
 
 #. Type: note
 #. Description
@@ -72,8 +71,8 @@ msgid ""
 "You should also check the permissions and ownership of the /var/lib/mysql "
 "directory:"
 msgstr ""
-"Inoltre si devono verificare i permessi e la proprietà della directory /var/"
-"lib/mysql:"
+"Inoltre è opportuno verificare i permessi e la proprietà della directory /"
+"var/lib/mysql:"
 
 #. Type: boolean
 #. Description
@@ -88,8 +87,8 @@ msgid ""
 "The /var/lib/mysql directory which contains the MariaDB databases is about "
 "to be removed."
 msgstr ""
-"La directory /var/lib/mysql contenente i database di MariaDB sta per essere "
-"eliminata."
+"La directory /var/lib/mysql che contiene i database di MariaDB sta per "
+"essere eliminata."
 
 #. Type: boolean
 #. Description
@@ -116,7 +115,7 @@ msgid ""
 "While not mandatory, it is highly recommended that you set a password for "
 "the MariaDB administrative \"root\" user."
 msgstr ""
-"Sebbene non sia obbligatoria, si raccomanda d'impostare una password per "
+"Anche se non è obbligatorio, si raccomanda d'impostare una password per "
 "l'utente d'amministrazione «root» di MariaDB."
 
 #. Type: password
@@ -160,15 +159,11 @@ msgstr ""
 #. Type: error
 #. Description
 #: ../mariadb-server-5.5.templates:7001
-#, fuzzy
-#| msgid ""
-#| "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
-#| "more information."
 msgid ""
 "Please read the /usr/share/doc/mariadb-server-5.5/README.Debian file for "
 "more information."
 msgstr ""
-"Per maggiori informazioni si consulti il file /usr/share/doc/mariadb-"
+"Per maggiori informazioni consultare il file /usr/share/doc/mariadb-"
 "server-5.5/README.Debian."
 
 #. Type: error
@@ -187,7 +182,7 @@ msgstr "Le due password inserite sono diverse. Riprovare."
 #. Description
 #: ../mariadb-server-5.5.templates:9001
 msgid "NDB Cluster seems to be in use"
-msgstr "È in uso un cluster NDB"
+msgstr "È in uso NDB Cluster"
 
 #. Type: error
 #. Description
@@ -197,15 +192,15 @@ msgid ""
 "mysql-cluster package and remove all lines starting with \"ndb\" from all "
 "config files below /etc/mysql/."
 msgstr ""
-"MySQL-5.1 non fornisce più il supporto per i cluster NDB. Si dovrebbe "
-"migrare al nuovo pacchetto mysql-cluster e rimuovere tutte le righe che "
-"iniziano per \"ndb\" da tutti i file di configurazione sotto /etc/mysql/."
+"MySQL-5.1 non fornisce più il supporto per NDB Cluster. Migrare al nuovo "
+"pacchetto mysql-cluster e rimuovere tutte le righe che iniziano per \"ndb\" "
+"da ogni file di configurazione sotto /etc/mysql/."
 
 #. Type: boolean
 #. Description
 #: ../mariadb-server-5.5.templates:10001
 msgid "Really migrate to MariaDB?"
-msgstr ""
+msgstr "Migrare a MariaDB?"
 
 #. Type: boolean
 #. Description
@@ -214,6 +209,8 @@ msgid ""
 "MariaDB is a drop-in replacement for MySQL. It will use your current "
 "configuration file (my.cnf) and current databases."
 msgstr ""
+"MariaDB è un perfetto sostituto per MySQL. Utilizzerà l'attuale file di "
+"configurazione (my.cnf) e i database presenti."
 
 #. Type: boolean
 #. Description
@@ -223,13 +220,6 @@ msgid ""
 "and thus migration back to MySQL might not always work, at least not as "
 "automatically as migrating from MySQL to MariaDB."
 msgstr ""
-
-#~ msgid "Start the MariaDB server on boot?"
-#~ msgstr "Lanciare il server MariaDB all'avvio?"
-
-#~ msgid ""
-#~ "The MariaDB server can be launched automatically at boot time or manually "
-#~ "with the '/etc/init.d/mysql start' command."
-#~ msgstr ""
-#~ "Il server MariaDB può essere lanciato automaticamente all'avvio del "
-#~ "sistema oppure manualmente con il comando «/etc/init.d/mysql start»."
+"Notare che MariaDB dispone di alcune funzionalità avanzate che non esistono "
+"in MySQL, di conseguenza non sempre funziona la migrazione all'indietro "
+"verso MySQL, o almeno non è automatica come la migrazione da MySQL a MariaDB."

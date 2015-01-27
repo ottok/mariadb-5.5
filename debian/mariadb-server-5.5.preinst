@@ -33,20 +33,18 @@ stop_server() {
     $cmd
     errno=$?
     set -e
-   
+
     # 0=ok, 100=no init script (fresh install)
     if [ "$errno" != 0 -a "$errno" != 100 ]; then
       echo "${cmd/ */} returned $errno" 1>&2
       echo "There is a MySQL server running, but we failed in our attempts to stop it." 1>&2
       echo "Stop it yourself and try again!" 1>&2
-      db_stop  	
+      db_stop
       exit 1
     fi
 }
 
 ################################ main() ##########################
-
-this_version=5.5
 
 # Show warning if old data exists
 if [ -d $DATADIR ]; then
@@ -55,6 +53,7 @@ if [ -d $DATADIR ]; then
   db_get mariadb-server/oneway_migration || true
   if [ "$RET" = "false" ]; then
     echo "Aborting MariaDB installation." 1>&2
+    db_fset mariadb-server/oneway_migration seen false || true
     db_stop
     exit 1
   fi
@@ -71,29 +70,25 @@ if egrep -qi -r '^[^#]*ndb.connectstring|^[[:space:]]*\[[[:space:]]*ndb_mgmd' /e
   exit 1
 fi
 
-# Abort if skip-bdb option is enabled, required for 5.0 -> 5.1 upgrades.
-#TODO
-
 # Safe the user from stupidities.
 show_downgrade_warning=0
 for i in `ls $DATADIR/debian-*.flag 2>/dev/null`; do
   found_version=`echo $i | sed 's/.*debian-\([0-9\.]\+\).flag/\1/'`
-  if dpkg --compare-versions "$this_version" '<<' "$found_version"; then
+  if dpkg --compare-versions "5.5" '<<' "$found_version"; then
     show_downgrade_warning=1
     break;
   fi
 done
 if [ "$show_downgrade_warning" = 1 ]; then
-  db_fset mariadb-server-$this_version/really_downgrade seen false || true
-  db_input medium mariadb-server-$this_version/really_downgrade || true
+  db_fset mariadb-server-5.5/really_downgrade seen false || true
+  db_input critical mariadb-server-5.5/really_downgrade || true
   db_go
-  db_get mariadb-server-$this_version/really_downgrade || true
+  db_get mariadb-server-5.5/really_downgrade || true
   if [ "$RET" = "true" ]; then
     rm -f $DATADIR/debian-*.flag
-    touch $DATADIR/debian-$this_version.flag
   else
-    echo "Aborting downgrade from (at least) $found_version to $this_version." 1>&2
-    echo "If are sure you want to downgrade to $this_version, remove the file" 1>&2
+    echo "Aborting downgrade from (at least) $found_version to 5.5." 1>&2
+    echo "If are sure you want to downgrade to 5.5, remove the file" 1>&2
     echo "$DATADIR/debian-*.flag and try installing again." 1>&2
     db_stop
     exit 1
@@ -114,7 +109,7 @@ fi
 # Now we have to ensure the following state:
 # /etc/passwd: mysql:x:100:101:MySQL Server:/var/lib/mysql:/bin/false
 # /etc/group:  mysql:x:101:
-# 
+#
 # Sadly there could any state be present on the system so we have to
 # modify everything carefully i.e. not doing a chown before creating
 # the user etc...
@@ -165,7 +160,7 @@ if LC_ALL=C BLOCKSIZE= df --portability $DATADIR/. | tail -n 1 | awk '{ exit ($4
 fi
 
 # Since the home directory was created before putting the user into
-# the mysql group and moreover we cannot guarantee that the 
+# the mysql group and moreover we cannot guarantee that the
 # permissions were correctly *before* calling this script, we fix them now.
 # In case we use NIS and no mysql user is present then this script should
 # better fail now than later..
