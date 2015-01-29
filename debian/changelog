@@ -1,6 +1,7 @@
 mariadb-5.5 (5.5.41-1) unstable; urgency=low
 
   * New upstream release
+  * Backported new cacert.pem etc from 5.5 the replace the expired ones
 
  -- Otto Kekäläinen <otto@seravo.fi>  Sat, 27 Dec 2014 15:59:46 +0200
 
