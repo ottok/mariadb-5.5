@@ -17,6 +17,7 @@ mariadb-5.5 (5.5.41-0ubuntu0.14.10.1) utopic-security; urgency=medium
       doc https://www.debian.org/doc/debian-policy/ch-relationships.html#s7.6.1
     - Backported the fix of #770177 from 10.0 to 5.5 so that the migration
       question will not be asked repeatedly. (LP: #1392539)
+  * Backported new cacert.pem etc from 5.5 the replace the expired ones
 
  -- Otto Kekäläinen <otto@seravo.fi>  Mon, 26 Jan 2015 21:15:00 +0200
 
