@@ -135,7 +135,7 @@ EOF
     db_set mysql-server/postrm_remove_database false || true
 
     # Clean up old flags before setting new one
-    rm $mysql_statedir/debian-*.flag
+    rm -f $mysql_statedir/debian-*.flag
     # To avoid downgrades.
     touch $mysql_statedir/debian-5.5.flag
 
