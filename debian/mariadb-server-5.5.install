@@ -28,7 +28,6 @@ usr/bin/perror
 usr/bin/replace
 usr/bin/resolve_stack_dump
 usr/bin/resolveip
-usr/lib/libhsclient.so.*
 usr/lib/mysql/plugin/auth_pam.so
 usr/lib/mysql/plugin/auth_socket.so
 usr/lib/mysql/plugin/ha_innodb.so
