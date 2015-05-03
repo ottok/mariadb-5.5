@@ -1,3 +1,13 @@
+mariadb-5.5 (5.5.43-1) unstable; urgency=low
+
+  * New upstream release. Fixes to the following security issues:
+    - CVE-2015-0501
+    - CVE-2015-2571
+    - CVE-2015-0505
+    - CVE-2015-0499
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Sun, 03 May 2015 23:21:11 +0300
+
 mariadb-5.5 (5.5.41-2) unstable; urgency=low
 
   * Critical backport from 10.0 (commit 439123d):

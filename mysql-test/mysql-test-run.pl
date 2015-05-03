@@ -109,6 +109,7 @@ require "lib/mtr_gprof.pl";
 require "lib/mtr_misc.pl";
 
 $SIG{INT}= sub { mtr_error("Got ^C signal"); };
+$SIG{HUP}= sub { mtr_error("Hangup detected on controlling terminal"); };
 
 our $mysql_version_id;
 my $mysql_version_extra;
@@ -908,6 +909,7 @@ sub run_worker ($) {
   my ($server_port, $thread_num)= @_;
 
   $SIG{INT}= sub { exit(1); };
+  $SIG{HUP}= sub { exit(1); };
 
   # Connect to server
   my $server = new IO::Socket::INET
@@ -1022,15 +1024,7 @@ sub ignore_option {
 
 # Setup any paths that are $opt_vardir related
 sub set_vardir {
-  my ($vardir)= @_;
-  if(IS_WINDOWS)
-  {
-    $opt_vardir= $vardir;
-  }
-  else
-  {
-    $opt_vardir= realpath($vardir);
-  }
+  ($opt_vardir)= @_;
 
   $path_vardir_trace= $opt_vardir;
   # Chop off any "c:", DBUG likes a unix path ex: c:/src/... => /src/...
@@ -1468,7 +1462,7 @@ sub command_line_setup {
     # Search through list of locations that are known
     # to be "fast disks" to find a suitable location
     # Use --mem=<dir> as first location to look.
-    my @tmpfs_locations= ($opt_mem, "/dev/shm", "/tmp");
+    my @tmpfs_locations= ($opt_mem,"/run/shm", "/dev/shm", "/tmp");
 
     foreach my $fs (@tmpfs_locations)
     {
@@ -1484,14 +1478,11 @@ sub command_line_setup {
   # --------------------------------------------------------------------------
   # Set the "var/" directory, the base for everything else
   # --------------------------------------------------------------------------
-  if(defined $ENV{MTR_BINDIR})
-  {
-    $default_vardir= "$ENV{MTR_BINDIR}/mysql-test/var";
-  }
-  else
-  {
-    $default_vardir= "$glob_mysql_test_dir/var";
-  }
+  my $vardir_location= (defined $ENV{MTR_BINDIR} 
+                          ? "$ENV{MTR_BINDIR}/mysql-test" 
+                          : $glob_mysql_test_dir);
+  $vardir_location= realpath $vardir_location unless IS_WINDOWS;
+  $default_vardir= "$vardir_location/var";
 
   if ( ! $opt_vardir )
   {
@@ -2495,6 +2486,7 @@ sub environment_setup {
   # ----------------------------------------------------
   my $exe_replace= mtr_exe_exists(vs_config_dirs('extra', 'replace'),
                                  "$basedir/extra/replace",
+                                 "$bindir/extra$opt_vs_config/replace",
                                  "$path_client_bindir/replace");
   $ENV{'REPLACE'}= native_path($exe_replace);
 
@@ -6375,7 +6367,7 @@ Options to control directories to use
   mem                   Run testsuite in "memory" using tmpfs or ramdisk
                         Attempts to find a suitable location
                         using a builtin list of standard locations
-                        for tmpfs (/dev/shm)
+                        for tmpfs (/run/shm, /dev/shm, /tmp)
                         The option can also be set using environment
                         variable MTR_MEM=[DIR]
   clean-vardir          Clean vardir if tests were successful and if

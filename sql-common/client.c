@@ -1,5 +1,5 @@
-/* Copyright (c) 2003, 2013, Oracle and/or its affiliates.
-   Copyright (c) 2009, 2013, Monty Program Ab
+/* Copyright (c) 2003, 2014, Oracle and/or its affiliates.
+   Copyright (c) 2009, 2015, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -118,6 +118,7 @@ my_bool	net_flush(NET *net);
 #define native_password_plugin_name "mysql_native_password"
 #define old_password_plugin_name    "mysql_old_password"
 
+uint            mariadb_deinitialize_ssl= 1;
 uint		mysql_port=0;
 char		*mysql_unix_port= 0;
 const char	*unknown_sqlstate= "HY000";
@@ -1884,7 +1885,7 @@ static int ssl_verify_server_cert(Vio *vio, const char* server_hostname, const c
   SSL *ssl;
   X509 *server_cert;
   char *cp1, *cp2;
-  char buf[256];
+  char *buf;
   DBUG_ENTER("ssl_verify_server_cert");
   DBUG_PRINT("enter", ("server_hostname: %s", server_hostname));
 
@@ -1918,8 +1919,14 @@ static int ssl_verify_server_cert(Vio *vio, const char* server_hostname, const c
     are what we expect.
   */
 
-  X509_NAME_oneline(X509_get_subject_name(server_cert), buf, sizeof(buf));
+  buf= X509_NAME_oneline(X509_get_subject_name(server_cert), 0, 0);
   X509_free (server_cert);
+
+  if (!buf)
+  {
+    *errptr= "Out of memory";
+    DBUG_RETURN(1);
+  }
 
   DBUG_PRINT("info", ("hostname in cert: %s", buf));
   cp1= strstr(buf, "/CN=");
@@ -1933,11 +1940,13 @@ static int ssl_verify_server_cert(Vio *vio, const char* server_hostname, const c
     DBUG_PRINT("info", ("Server hostname in cert: %s", cp1));
     if (!strcmp(cp1, server_hostname))
     {
+      free(buf);
       /* Success */
       DBUG_RETURN(0);
     }
   }
   *errptr= "SSL certificate validation failure";
+  free(buf);
   DBUG_RETURN(1);
 }
 
