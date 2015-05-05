@@ -1,5 +1,5 @@
-/* Copyright (c) 2000, 2012, Oracle and/or its affiliates.
-   Copyright (c) 2008, 2014, SkySQL Ab.
+/* Copyright (c) 2000, 2014, Oracle and/or its affiliates.
+   Copyright (c) 2008, 2015, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -890,6 +890,23 @@ static bool create_key_infos(uchar *strpos, uint keys, KEY *keyinfo,
   return 0;
 }
 
+/** ensures that the enum value (read from frm) is within limits
+
+    if not - issues a warning and resets the value to 0
+    (that is, 0 is assumed to be a default value)
+*/
+static uint enum_value_with_check(THD *thd, TABLE_SHARE *share,
+                                  const char *name, uint value, uint limit)
+{
+  if (value < limit)
+    return value;
+
+  sql_print_warning("%s.frm: invalid value %d for the field %s",
+                share->normalized_path.str, value, name);
+  return 0;
+}
+
+
 /*
   Read data from a binary .frm file from MySQL 3.23 - 5.0 into TABLE_SHARE
 */
@@ -983,9 +1000,12 @@ static int open_binary_frm(THD *thd, TABLE_SHARE *share, uchar *head,
   if (!head[32])				// New frm file in 3.23
   {
     share->avg_row_length= uint4korr(head+34);
-    share->transactional= (ha_choice) (head[39] & 3);
-    share->page_checksum= (ha_choice) ((head[39] >> 2) & 3);
-    share->row_type= (row_type) head[40];
+    share->transactional= (ha_choice)
+      enum_value_with_check(thd, share, "transactional", (head[39] & 3), HA_CHOICE_MAX);
+    share->page_checksum= (ha_choice)
+      enum_value_with_check(thd, share, "page_checksum", (head[39] >> 2) & 3, HA_CHOICE_MAX);
+    share->row_type= (row_type)
+      enum_value_with_check(thd, share, "row_format", head[40], ROW_TYPE_MAX);
     share->table_charset= get_charset((((uint) head[41]) << 8) + 
                                         (uint) head[38],MYF(0));
     share->null_field_first= 1;
@@ -2703,7 +2723,9 @@ partititon_err:
   outparam->no_replicate= outparam->file &&
                           test(outparam->file->ha_table_flags() &
                                HA_HAS_OWN_BINLOGGING);
-  thd->status_var.opened_tables++;
+  /* Increment the opened_tables counter, only when open flags set. */
+  if (db_stat)
+    thd->status_var.opened_tables++;
 
   thd->lex->context_analysis_only= save_context_analysis_only;
   DBUG_RETURN (0);
@@ -5012,7 +5034,8 @@ TABLE *TABLE_LIST::get_real_join_table()
   TABLE_LIST *tbl= this;
   while (tbl->table == NULL || tbl->table->reginfo.join_tab == NULL)
   {
-    if (tbl->view == NULL && tbl->derived == NULL)
+    if ((tbl->view == NULL && tbl->derived == NULL) ||
+        tbl->is_materialized_derived())
       break;
     /* we do not support merging of union yet */
     DBUG_ASSERT(tbl->view == NULL ||
@@ -5021,28 +5044,25 @@ TABLE *TABLE_LIST::get_real_join_table()
                tbl->derived->first_select()->next_select() == NULL);
 
     {
-      List_iterator_fast<TABLE_LIST> ti;
+      List_iterator_fast<TABLE_LIST>
+        ti(tbl->view != NULL ?
+           tbl->view->select_lex.top_join_list :
+           tbl->derived->first_select()->top_join_list);
+      for (;;)
       {
-        List_iterator_fast<TABLE_LIST>
-          ti(tbl->view != NULL ?
-             tbl->view->select_lex.top_join_list :
-             tbl->derived->first_select()->top_join_list);
-        for (;;)
-        {
-          tbl= NULL;
-          /*
-            Find left table in outer join on this level
-            (the list is reverted).
-          */
-          for (TABLE_LIST *t= ti++; t; t= ti++)
-            tbl= t;
-          if (!tbl)
-            return NULL; // view/derived with no tables
-          if (!tbl->nested_join)
-            break;
-          /* go deeper if we've found nested join */
-          ti= tbl->nested_join->join_list;
-        }
+        tbl= NULL;
+        /*
+          Find left table in outer join on this level
+          (the list is reverted).
+        */
+        for (TABLE_LIST *t= ti++; t; t= ti++)
+          tbl= t;
+        if (!tbl)
+          return NULL; // view/derived with no tables
+        if (!tbl->nested_join)
+          break;
+        /* go deeper if we've found nested join */
+        ti= tbl->nested_join->join_list;
       }
     }
   }
@@ -5946,18 +5966,32 @@ bool TABLE::alloc_keys(uint key_count)
 }
 
 
-void TABLE::create_key_part_by_field(KEY *keyinfo,
-                                     KEY_PART_INFO *key_part_info,
+/**
+  @brief
+  Populate a KEY_PART_INFO structure with the data related to a field entry.
+
+  @param key_part_info  The structure to fill.
+  @param field          The field entry that represents the key part.
+  @param fleldnr        The number of the field, count starting from 1.
+
+  TODO: This method does not make use of any table specific fields. It
+  could be refactored to act as a constructor for KEY_PART_INFO instead.
+*/
+
+void TABLE::create_key_part_by_field(KEY_PART_INFO *key_part_info,
                                      Field *field, uint fieldnr)
-{   
+{
   key_part_info->null_bit= field->null_bit;
   key_part_info->null_offset= (uint) (field->null_ptr -
                                       (uchar*) record[0]);
   key_part_info->field= field;
   key_part_info->fieldnr= fieldnr;
   key_part_info->offset= field->offset(record[0]);
-  key_part_info->length=   (uint16) field->pack_length();
-  keyinfo->key_length+= key_part_info->length;
+  /*
+     field->key_length() accounts for the raw length of the field, excluding
+     any metadata such as length of field or the NULL flag.
+  */
+  key_part_info->length= (uint16) field->key_length();
   key_part_info->key_part_flag= 0;
   /* TODO:
     The below method of computing the key format length of the
@@ -5969,17 +6003,20 @@ void TABLE::create_key_part_by_field(KEY *keyinfo,
   */
   key_part_info->store_length= key_part_info->length;
 
+  /*
+     The total store length of the key part is the raw length of the field +
+     any metadata information, such as its length for strings and/or the null
+     flag.
+  */
   if (field->real_maybe_null())
   {
     key_part_info->store_length+= HA_KEY_NULL_LENGTH;
-    keyinfo->key_length+= HA_KEY_NULL_LENGTH;
   }
   if (field->type() == MYSQL_TYPE_BLOB || 
       field->type() == MYSQL_TYPE_GEOMETRY ||
       field->real_type() == MYSQL_TYPE_VARCHAR)
   {
     key_part_info->store_length+= HA_KEY_BLOB_LENGTH;
-    keyinfo->key_length+= HA_KEY_BLOB_LENGTH; // ???
     key_part_info->key_part_flag|=
       field->type() == MYSQL_TYPE_BLOB ? HA_BLOB_PART: HA_VAR_LENGTH_PART;
   }
@@ -6102,7 +6139,8 @@ bool TABLE::add_tmp_key(uint key, uint key_parts,
     if (key_start)
       (*reg_field)->key_start.set_bit(key);
     (*reg_field)->part_of_key.set_bit(key);
-    create_key_part_by_field(keyinfo, key_part_info, *reg_field, fld_idx+1);
+    create_key_part_by_field(key_part_info, *reg_field, fld_idx+1);
+    keyinfo->key_length += key_part_info->store_length;
     (*reg_field)->flags|= PART_KEY_FLAG;
     key_start= FALSE;
     key_part_info++;

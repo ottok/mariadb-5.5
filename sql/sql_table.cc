@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2000, 2013, Oracle and/or its affiliates.
-   Copyright (c) 2010, 2014, SkySQL Ab.
+   Copyright (c) 2000, 2015, Oracle and/or its affiliates.
+   Copyright (c) 2010, 2015, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include "sql_base.h"   // open_table_uncached, lock_table_names
 #include "lock.h"       // mysql_unlock_tables
 #include "strfunc.h"    // find_type2, find_set
-#include "sql_view.h" // view_checksum 
 #include "sql_truncate.h"                       // regenerate_locked_table 
 #include "sql_partition.h"                      // mem_alloc_error,
                                                 // generate_partition_syntax,
@@ -5580,6 +5579,10 @@ mysql_prepare_alter_table(THD *thd, TABLE *table,
   if (!(used_fields & HA_CREATE_USED_TRANSACTIONAL))
     create_info->transactional= table->s->transactional;
 
+  /* Creation of federated table with LIKE clause needs connection string */
+  if (!(used_fields & HA_CREATE_USED_CONNECTION))
+    create_info->connect_string= table->s->connect_string;
+
   restore_record(table, s->default_values);     // Empty record for DEFAULT
 
   create_info->option_list= merge_engine_table_options(table->s->option_list,
@@ -7644,12 +7647,12 @@ err:
 
 
 /*
-  Recreates tables by calling mysql_alter_table().
+  Recreates one table by calling mysql_alter_table().
 
   SYNOPSIS
     mysql_recreate_table()
     thd			Thread handler
-    tables		Tables to recreate
+    table_list          Table to recreate
 
  RETURN
     Like mysql_alter_table().
@@ -7658,9 +7661,9 @@ bool mysql_recreate_table(THD *thd, TABLE_LIST *table_list)
 {
   HA_CREATE_INFO create_info;
   Alter_info alter_info;
+  TABLE_LIST *next_table= table_list->next_global;
 
   DBUG_ENTER("mysql_recreate_table");
-  DBUG_ASSERT(!table_list->next_global);
   /*
     table_list->table has been closed and freed. Do not reference
     uninitialized data. open_tables() could fail.
@@ -7672,15 +7675,19 @@ bool mysql_recreate_table(THD *thd, TABLE_LIST *table_list)
   table_list->lock_type= TL_READ_NO_INSERT;
   /* Same applies to MDL request. */
   table_list->mdl_request.set_type(MDL_SHARED_NO_WRITE);
+  /* hide following tables from open_tables() */
+  table_list->next_global= NULL;
 
   bzero((char*) &create_info, sizeof(create_info));
   create_info.row_type=ROW_TYPE_NOT_USED;
   create_info.default_table_charset=default_charset_info;
   /* Force alter table to recreate table */
   alter_info.flags= (ALTER_CHANGE_COLUMN | ALTER_RECREATE);
-  DBUG_RETURN(mysql_alter_table(thd, NullS, NullS, &create_info,
+  bool res= mysql_alter_table(thd, NullS, NullS, &create_info,
                                 table_list, &alter_info, 0,
-                                (ORDER *) 0, 0, 0));
+                                (ORDER *) 0, 0, 0);
+  table_list->next_global= next_table;
+  DBUG_RETURN(res);
 }
 
 
