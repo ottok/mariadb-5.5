@@ -1,5 +1,5 @@
-/* Copyright (c) 2000, 2013, Oracle and/or its affiliates.
-   Copyright (c) 2010, 2013 Monty Program Ab
+/* Copyright (c) 2000, 2015, Oracle and/or its affiliates.
+   Copyright (c) 2010, 2015, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -643,7 +643,8 @@ found:
     open_table_error(share, share->error, share->open_errno, share->errarg);
     DBUG_RETURN(0);
   }
-  if (share->is_view && !(db_flags & OPEN_VIEW))
+  if ((share->is_view && !(db_flags & OPEN_VIEW)) ||
+      (!share->is_view && (db_flags & OPEN_VIEW_ONLY)))
   {
     open_table_error(share, 1, ENOENT, 0);
     DBUG_RETURN(0);
@@ -2028,6 +2029,9 @@ unique_table(THD *thd, TABLE_LIST *table, TABLE_LIST *table_list,
              bool check_alias)
 {
   TABLE_LIST *dup;
+
+  table= table->find_table_for_update();
+
   if (table->table && table->table->file->ht->db_type == DB_TYPE_MRG_MYISAM)
   {
     TABLE_LIST *child;
@@ -3024,7 +3028,11 @@ retry_share:
   mysql_mutex_lock(&LOCK_open);
 
   if (!(share= get_table_share_with_discover(thd, table_list, key,
-                                             key_length, OPEN_VIEW,
+                                             key_length,
+                                             (OPEN_VIEW |
+                                              ((table_list->required_type ==
+                                                FRMTYPE_VIEW) ?
+                                               OPEN_VIEW_ONLY : 0)),
                                              &error,
                                              hash_value)))
   {
@@ -4103,7 +4111,7 @@ request_backoff_action(enum_open_table_action action_arg,
   if (action_arg != OT_REOPEN_TABLES && m_has_locks)
   {
     my_error(ER_LOCK_DEADLOCK, MYF(0));
-    mark_transaction_to_rollback(m_thd, true);
+    m_thd->mark_transaction_to_rollback(true);
     return TRUE;
   }
   /*
@@ -7253,7 +7261,7 @@ find_item_in_list(Item *find, List<Item> &items, uint *counter,
         Item_field for tables.
       */
       Item_ident *item_ref= (Item_ident *) item;
-      if (item_ref->name && item_ref->table_name &&
+      if (field_name && item_ref->name && item_ref->table_name &&
           !my_strcasecmp(system_charset_info, item_ref->name, field_name) &&
           !my_strcasecmp(table_alias_charset, item_ref->table_name,
                          table_name) &&
