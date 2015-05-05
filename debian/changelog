@@ -1,3 +1,13 @@
+mariadb-5.5 (5.5.43-1ubuntu0.14.10.1) utopic-security; urgency=low
+
+  * SECURITY UPDATE: Update to 5.5.43 to fix security issues (LP: #1451677):
+    - CVE-2015-0501
+    - CVE-2015-2571
+    - CVE-2015-0505
+    - CVE-2015-0499
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Tue, 05 May 2015 09:17:31 +0300
+
 mariadb-5.5 (5.5.41-1ubuntu0.14.10.1) utopic-security; urgency=medium
 
   * Critical backport from 10.0 (commit 439123d):
