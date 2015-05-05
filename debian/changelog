@@ -1,4 +1,4 @@
-mariadb-5.5 (5.5.41-1ubuntu0.14.10.2) utopic-security; urgency=medium
+mariadb-5.5 (5.5.41-1ubuntu0.14.10.1) utopic-security; urgency=medium
 
   * Critical backport from 10.0 (commit 439123d):
     Fix mariadb-server-5.5.postinst so that the flag removal will not emit
