@@ -5,6 +5,7 @@ mariadb-5.5 (5.5.43-1ubuntu0.14.10.1) utopic-security; urgency=low
     - CVE-2015-2571
     - CVE-2015-0505
     - CVE-2015-0499
+  * Hotfix patch to fix the server crash caused by mysql_upgrade (MDEV-8115)
 
  -- Otto Kekäläinen <otto@seravo.fi>  Tue, 05 May 2015 09:17:31 +0300
 
