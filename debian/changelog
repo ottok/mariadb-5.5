@@ -1,10 +1,11 @@
 mariadb-5.5 (5.5.43-1) unstable; urgency=low
 
-  * New upstream release. Fixes to the following security issues:
+  * New upstream release. Includes fixes to the following security issues:
     - CVE-2015-0501
     - CVE-2015-2571
     - CVE-2015-0505
     - CVE-2015-0499
+  * Hotfix patch to fix the server crash caused by mysql_upgrade (MDEV-8115)
 
  -- Otto Kekäläinen <otto@seravo.fi>  Sun, 03 May 2015 23:21:11 +0300
 
