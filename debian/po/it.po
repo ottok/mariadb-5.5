@@ -1,6 +1,7 @@
-# Italian (it) translation of debconf templates for mariadb-5.5
-# This file is distributed under the same license as the mariadb-5.5 package.
-# Luca Monducci <luca.mo@tiscali.it>, 2006-2014.
+# Italian (it) translation of debconf templates for mysql-dfsg-5.1
+# Copyright (C) 2009 Software in the Public Interest
+# This file is distributed under the same license as the mysql-dfsg-5.1 package.
+# Luca Monducci <luca.mo@tiscali.it>, 2006 - 2009.
 # 
 msgid ""
 msgstr ""
