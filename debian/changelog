@@ -1,3 +1,12 @@
+mariadb-5.5 (5.5.44-1ubuntu0.14.10.1) utopic-security; urgency=low
+
+  * SECURITY UPDATE: Update to 5.5.44 to fix security issues (LP: #1464895):
+    - CVE-2015-3152
+  * Upstream also includes lots of line ending changes (from CRLF -> LF)
+  * Removed hotfix patch now included in upstream release (MDEV-8115)
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Sat, 13 Jun 2015 21:09:48 +0300
+
 mariadb-5.5 (5.5.43-1ubuntu0.14.10.1) utopic-security; urgency=low
 
   * SECURITY UPDATE: Update to 5.5.43 to fix security issues (LP: #1451677):
