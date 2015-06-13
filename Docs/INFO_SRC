@@ -1,8 +1,8 @@
-commit: 4c87f727734955f9e4a0ffde25aae4d43ec0b2a5
-date: 2015-04-29 16:24:52 +0200
-build-date: 2015-04-29 20:55:40 +0200 
-short: 4c87f72
+commit: 5a44e1a4024f1760021e5c6fd65773584d60513a
+date: 2015-06-09 22:16:26 +0200
+build-date: 2015-06-09 22:25:59 +0200 
+short: 5a44e1a
 branch: HEAD
 
 
-MySQL source 5.5.43
+MySQL source 5.5.44
