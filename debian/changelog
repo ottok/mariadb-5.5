@@ -1,3 +1,11 @@
+mariadb-5.5 (5.5.44-1) unstable; urgency=low
+
+  * New upstream release. Includes fixes to the following security issue:
+    - CVE-2015-3152
+  * Upstream also includes lots of line ending changes (from CRLF -> LF)
+
+ -- Otto Kekäläinen <otto@seravo.fi>  Sat, 13 Jun 2015 21:09:48 +0300
+
 mariadb-5.5 (5.5.43-1) unstable; urgency=low
 
   * New upstream release. Includes fixes to the following security issues:
