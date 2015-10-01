@@ -15,7 +15,7 @@
 		# If this fails, check debian.conf!
 		MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
 		if [ -z "`$MYADMIN ping 2>/dev/null`" ]; then
-		  # Really no mysqld or rather a missing debian-sys-maint user?
+		  # Really no mysqld or in incorrect authentication in /etc/mysqll/debian.cnf user?
 		  # If this occurs and is not a error please report a bug.
 		  if ps cax | grep -q mysqld; then
  		    exit 1
