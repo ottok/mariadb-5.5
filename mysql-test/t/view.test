@@ -4741,6 +4741,50 @@ SHOW CREATE VIEW v4;
 
 DROP VIEW v1, v2, v3, v4, v5;
 
+
+--echo #
+--echo # BUG#19886430: VIEW CREATION WITH NAMED COLUMNS, OVER UNION,
+--echo #               IS REJECTED
+
+--echo # Without the patch, reports an error.
+CREATE VIEW v1 (fld1, fld2) AS
+  SELECT 1 AS a, 2 AS b
+    UNION ALL
+  SELECT 1 AS a, 1 AS a;
+
+--echo # The column names are explicitly specified and not duplicates, hence
+--echo # succeeds.
+CREATE VIEW v2 (fld1, fld2) AS
+  SELECT 1 AS a, 2 AS a
+    UNION ALL
+  SELECT 1 AS a, 1 AS a;
+
+--echo # The column name in the first SELECT are not duplicates, hence succeeds.
+CREATE VIEW v3 AS
+  SELECT 1 AS a, 2 AS b
+    UNION ALL
+  SELECT 1 AS a, 1 AS a;
+
+--echo # Should report an error, since the explicitly specified column names are
+--echo # duplicates.
+--error ER_DUP_FIELDNAME
+CREATE VIEW v4 (fld1, fld1) AS
+  SELECT 1 AS a, 2 AS b
+    UNION ALL
+  SELECT 1 AS a, 1 AS a;
+
+--echo # Should report an error, since duplicate column name is specified in the
+--echo # First SELECT.
+--error ER_DUP_FIELDNAME
+CREATE VIEW v4 AS
+  SELECT 1 AS a, 2 AS a
+    UNION ALL
+  SELECT 1 AS a, 1 AS a;
+
+--echo # Cleanup
+DROP VIEW v1, v2, v3;
+
+
 # Check that all connections opened by test cases in this file are really
 # gone so execution of other tests won't be affected by their presence.
 --source include/wait_until_count_sessions.inc
@@ -5379,6 +5423,27 @@ alter algorithm=merge view v2 (c) as select b+1 from t1;
 show create view v2;
 drop view v2;
 drop table t1;
+
+--echo #
+--echo # MDEV-8554: Server crashes in base_list_iterator::next_fast on 1st execution of PS with a multi-table update
+--echo #
+CREATE TABLE t1 (a INT) ENGINE=MyISAM;
+INSERT INTO t1 VALUES (1),(2); # Not necessary, the table can be empty
+
+CREATE TABLE t2 (b INT) ENGINE=MyISAM;
+INSERT INTO t2 VALUES (3),(4); # Not necessary, the table can be empty
+
+CREATE TABLE t3 (c INT) ENGINE=MyISAM;
+INSERT INTO t3 VALUES (5),(6); # Not necessary, the table can be empty
+
+CREATE OR REPLACE ALGORITHM=MERGE VIEW v3 AS SELECT * FROM t3;
+
+PREPARE stmt FROM 'UPDATE t1, t2 SET a = 1 WHERE a IN ( SELECT 0 FROM t3 )';
+UPDATE t1, t2 SET a = 1 WHERE a IN ( SELECT 0 FROM v3 );
+EXECUTE stmt;
+
+DROP TABLE t1, t2, t3;
+DROP VIEW v3;
 
 --echo # -----------------------------------------------------------------
 --echo # -- End of 5.5 tests.
