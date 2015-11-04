@@ -5,5 +5,6 @@
 50_mysql-test__db_test.diff
 61_replace_dash_with_bash_mbug675185.diff
 75_man_syntax_fixes.diff
+80_fix-events-test-to-year2020.diff
 82_extend_default_test_timeout_for_tokudb.diff
 99_remove_rename_mariadb-server_files_in.diff

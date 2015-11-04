@@ -17,6 +17,7 @@ mariadb-5.5 (5.5.46-1ubuntu0.14.04.2) trusty-security; urgency=low
     - CVE-2015-4819
     - CVE-2015-4879
   * Update new Oracle CVE identifiers to old MariaDB changelog entries
+  * New patch: Extend date in test suite so that main.events_1 will pass
 
  -- Otto Kekäläinen <otto@seravo.fi>  Tue, 03 Nov 2015 11:41:30 +0200
 
