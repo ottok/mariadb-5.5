@@ -1,8 +1,8 @@
-commit: 16c4b3c68b06653592a9500050ad977a38f4ebae
-date: 2015-10-09 16:43:59 +0200
-build-date: 2015-10-09 18:51:17 +0200 
-short: 16c4b3c
+commit: d67aacb4fbb449ffa8db4e3d70fe8756d62b5222
+date: 2015-12-09 17:11:55 +0100
+build-date: 2015-12-09 18:22:49 +0100 
+short: d67aacb
 branch: HEAD
 
 
-MySQL source 5.5.46
+MySQL source 5.5.47
