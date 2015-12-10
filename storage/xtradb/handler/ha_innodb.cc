@@ -1035,6 +1035,19 @@ thd_supports_xa(
 }
 
 /******************************************************************//**
+Check the status of fake changes mode (innodb_fake_changes)
+@return	true	if fake change mode is enabled. */
+extern "C" UNIV_INTERN
+ibool
+thd_fake_changes(
+/*=============*/
+	void*	thd)	/*!< in: thread handle, or NULL to query
+			the global innodb_supports_xa */
+{
+	return(THDVAR((THD*) thd, fake_changes));
+}
+
+/******************************************************************//**
 Returns the lock wait timeout for the current connection.
 @return	the lock wait timeout, in seconds */
 extern "C" UNIV_INTERN
@@ -1748,10 +1761,11 @@ innobase_next_autoinc(
 	if (next_value == 0) {
 		ulonglong	next;
 
-		if (current > offset) {
+		if (current >= offset) {
 			next = (current - offset) / step;
 		} else {
-			next = (offset - current) / step;
+			next = 0;
+			block -= step;
 		}
 
 		ut_a(max_value > next);
@@ -1799,7 +1813,15 @@ innobase_trx_init(
 	trx->check_unique_secondary = !thd_test_options(
 		thd, OPTION_RELAXED_UNIQUE_CHECKS);
 
-	trx->fake_changes = THDVAR(thd, fake_changes);
+	/* Transaction on start caches the fake_changes state and uses it for
+	complete transaction lifetime.
+	There are some APIs that doesn't need an active transaction object
+	but transaction object are just use as a cache object/data carrier.
+	Before using transaction object for such APIs refresh the state of
+	fake_changes. */
+	if (trx->state == TRX_NOT_STARTED) {
+		trx->fake_changes = thd_fake_changes(thd);
+	}
 
 #ifdef EXTENDED_SLOWLOG
 	if (thd_log_slow_verbosity(thd) & (1ULL << SLOG_V_INNODB)) {
@@ -3619,12 +3641,26 @@ innobase_commit(
 	/* No-op in XtraDB */
 	trx_search_latch_release_if_reserved(trx);
 
+	/* If fake-changes mode = ON then allow
+	SELECT (they are read-only) and
+	CREATE ... SELECT * from table (Well this doesn't open up DDL for InnoDB
+	as ha_innobase::create will return appropriate error if fake-change = ON
+	but if create is trying to use other SE and SELECT is executing on
+	InnoDB table then we allow SELECT to proceed.
+	Ideally, statement like this should be marked CREATE_SELECT like
+	INSERT_SELECT but unfortunately it doesn't). */
 	if (UNIV_UNLIKELY(trx->fake_changes
+			  && (thd_sql_command(thd) != SQLCOM_SELECT
+			      && thd_sql_command(thd) != SQLCOM_CREATE_TABLE)
 			  && (all || (!thd_test_options(thd,
 				OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) {
 
-		innobase_rollback(hton, thd, all); /* rollback implicitly */
-		thd->stmt_da->reset_diagnostics_area(); /* because debug assertion code complains, if something left */
+		/* rollback implicitly */
+		innobase_rollback(hton, thd, all);
+
+		/* because debug assertion code complains, if something left */
+		thd->stmt_da->reset_diagnostics_area();
+
 		DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 	}
 	/* Transaction is deregistered only in a commit or a rollback. If
@@ -4692,8 +4728,9 @@ ha_innobase::open(
 		DBUG_RETURN(1);
 	}
 
-	if (UNIV_UNLIKELY(share->ib_table && share->ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(share->ib_table &&
+			 share->ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1)) {
 		free_share(share);
 
 		DBUG_RETURN(HA_ERR_CRASHED_ON_USAGE);
@@ -4721,8 +4758,9 @@ ha_innobase::open(
 	/* Get pointer to a table object in InnoDB dictionary cache */
 	ib_table = dict_table_get(norm_name, TRUE, ignore_err);
 
-	if (UNIV_UNLIKELY(ib_table && ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(ib_table &&
+			 ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1)) {
 		free_share(share);
 		my_free(upd_buf);
 		upd_buf = NULL;
@@ -4775,8 +4813,9 @@ ha_innobase::open(
 				}
 
 				ib_table = dict_table_get(
-					par_case_name, FALSE, ignore_err);
+					par_case_name, TRUE, ignore_err);
 			}
+
 			if (ib_table) {
 #ifndef __WIN__
 				sql_print_warning("Partition table %s opened "
@@ -4798,6 +4837,10 @@ ha_innobase::open(
 						  "current file system\n",
 						  norm_name);
 #endif
+				/* We allow use of table if it is found.
+				this is consistent to current behavior
+				to innodb_plugin */
+				share->ib_table = ib_table;
 				goto table_opened;
 			}
 		}
@@ -6174,9 +6217,9 @@ ha_innobase::write_row(
 	DBUG_ENTER("ha_innobase::write_row");
 
 	if (prebuilt->trx != trx) {
-	  sql_print_error("The transaction object for the table handle is at "
-			  "%p, but for the current thread it is at %p",
-			  (const void*) prebuilt->trx, (const void*) trx);
+		sql_print_error("The transaction object for the table handle is at "
+			"%p, but for the current thread it is at %p",
+			(const void*) prebuilt->trx, (const void*) trx);
 
 		fputs("InnoDB: Dump of 200 bytes around prebuilt: ", stderr);
 		ut_print_buf(stderr, ((const byte*)prebuilt) - 100, 200);
@@ -6190,7 +6233,7 @@ ha_innobase::write_row(
 
 	ha_statistic_increment(&SSV::ha_write_count);
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -6416,7 +6459,7 @@ report_error:
 func_exit:
 	innobase_active_small();
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -6618,7 +6661,7 @@ ha_innobase::update_row(
 
 	ha_statistic_increment(&SSV::ha_update_count);
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -6711,7 +6754,7 @@ ha_innobase::update_row(
 
 	innobase_active_small();
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -6736,7 +6779,7 @@ ha_innobase::delete_row(
 
 	ha_statistic_increment(&SSV::ha_delete_count);
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -6768,7 +6811,7 @@ ha_innobase::delete_row(
 
 	innobase_active_small();
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -7017,8 +7060,10 @@ ha_innobase::index_read(
 
 	ha_statistic_increment(&SSV::ha_read_key_count);
 
-	if (UNIV_UNLIKELY(share->ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(!share->ib_table ||
+			(share->ib_table &&
+			 share->ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1))) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -7089,8 +7134,10 @@ ha_innobase::index_read(
 		ret = DB_UNSUPPORTED;
 	}
 
-	if (UNIV_UNLIKELY(share->ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(!share->ib_table ||
+			(share->ib_table &&
+			 share->ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1))) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -7208,8 +7255,10 @@ ha_innobase::change_active_index(
 {
 	DBUG_ENTER("change_active_index");
 
-	if (UNIV_UNLIKELY(share->ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(!share->ib_table ||
+			(share->ib_table &&
+			 share->ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1))) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -7332,8 +7381,10 @@ ha_innobase::general_fetch(
 		DBUG_RETURN(HA_ERR_END_OF_FILE);
 	}
 
-	if (UNIV_UNLIKELY(share->ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(!share->ib_table ||
+			(share->ib_table &&
+			 share->ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1))) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -7346,8 +7397,10 @@ ha_innobase::general_fetch(
 
 	innodb_srv_conc_exit_innodb(prebuilt->trx);
 
-	if (UNIV_UNLIKELY(share->ib_table->is_corrupt &&
-			  srv_pass_corrupt_table <= 1)) {
+	if (UNIV_UNLIKELY(!share->ib_table ||
+			(share->ib_table &&
+			 share->ib_table->is_corrupt &&
+			 srv_pass_corrupt_table <= 1))) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -8628,7 +8681,7 @@ ha_innobase::truncate(void)
 
 	update_thd(ha_thd());
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -8640,7 +8693,7 @@ ha_innobase::truncate(void)
 
 	error = row_truncate_table_for_mysql(prebuilt->table, prebuilt->trx);
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -9365,7 +9418,8 @@ ha_innobase::info_low(
 	ib_table = prebuilt->table;
 
 	if (flag & HA_STATUS_TIME) {
-		if ((called_from_analyze || innobase_stats_on_metadata) && !share->ib_table->is_corrupt) {
+		if ((called_from_analyze || innobase_stats_on_metadata) &&
+		     share->ib_table && !share->ib_table->is_corrupt) {
 			/* In sql_show we call with this flag: update
 			then statistics so that they are up-to-date */
 
@@ -9719,7 +9773,7 @@ ha_innobase::analyze(
 	THD*		thd,		/*!< in: connection thread handle */
 	HA_CHECK_OPT*	check_opt)	/*!< in: currently ignored */
 {
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		return(HA_ADMIN_CORRUPT);
 	}
 
@@ -9727,7 +9781,7 @@ ha_innobase::analyze(
 	info_low(HA_STATUS_TIME | HA_STATUS_CONST | HA_STATUS_VARIABLE,
 		 true /* called from analyze */);
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		return(HA_ADMIN_CORRUPT);
 	}
 
@@ -9980,7 +10034,7 @@ ha_innobase::check(
 		my_error(ER_QUERY_INTERRUPTED, MYF(0));
 	}
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		return(HA_ADMIN_CORRUPT);
 	}
 
@@ -10783,7 +10837,7 @@ ha_innobase::transactional_table_lock(
 
 	update_thd(thd);
 
-	if (share->ib_table->is_corrupt) {
+	if (!share->ib_table || share->ib_table->is_corrupt) {
 		DBUG_RETURN(HA_ERR_CRASHED);
 	}
 
@@ -11586,15 +11640,12 @@ ha_innobase::get_auto_increment(
 
 		current = *first_value;
 
-		/* If the increment step of the auto increment column
-		decreases then it is not affecting the immediate
-		next value in the series. */
-		if (prebuilt->autoinc_increment > increment) {
+		if (prebuilt->autoinc_increment != increment) {
 
 			current = autoinc - prebuilt->autoinc_increment;
 
 			current = innobase_next_autoinc(
-				current, 1, increment, 1, col_max_value);
+				current, 1, increment, offset, col_max_value);
 
 			dict_table_autoinc_initialize(prebuilt->table, current);
 
@@ -12698,6 +12749,46 @@ innodb_change_buffering_update(
 		 *static_cast<const char*const*>(save);
 }
 
+#ifdef UNIV_DEBUG
+/*************************************************************//**
+Check if it is a valid value of innodb_track_changed_pages.
+Changed pages tracking is not working correctly without initialization
+procedure on server startup. The function allows to temporary
+disable tracking, but only if the feature was enabled on startup.
+This function is registered as a callback with MySQL.
+@return	0 for valid innodb_track_changed_pages */
+static
+int
+innodb_track_changed_pages_validate(
+	THD*				thd,	/*!< in: thread handle */
+	struct st_mysql_sys_var*	var,	/*!< in: pointer to system
+						variable */
+	void*				save,	/*!< out: immediate result
+						for update function */
+	struct st_mysql_value*		value)	/*!< in: incoming bool */
+{
+	static bool     enabled_on_startup = false;
+	long long	intbuf = 0;
+
+	if (value->val_int(value, &intbuf)) {
+		/* The value is NULL. That is invalid. */
+		return 1;
+	}
+
+	if (srv_track_changed_pages || enabled_on_startup) {
+		enabled_on_startup = true;
+		*reinterpret_cast<ulong*>(save)
+			= static_cast<ulong>(intbuf);
+		return 0;
+	}
+
+	if (intbuf == srv_track_changed_pages)
+		return 0;
+
+	return 1;
+}
+#endif
+
 #ifndef DBUG_OFF
 static char* srv_buffer_pool_evict;
 
@@ -13402,13 +13493,16 @@ static MYSQL_SYSVAR_ENUM(stats_method, srv_innodb_stats_method,
 /* Make this variable dynamic for debug builds to
 provide a testcase sync facility */
 #define track_changed_pages_flags PLUGIN_VAR_NOCMDARG
+#define track_changed_pages_check innodb_track_changed_pages_validate
 #else
 #define track_changed_pages_flags PLUGIN_VAR_NOCMDARG | PLUGIN_VAR_READONLY
+#define track_changed_pages_check NULL
 #endif
 static MYSQL_SYSVAR_BOOL(track_changed_pages, srv_track_changed_pages,
   track_changed_pages_flags,
   "Track the redo log for changed pages and output a changed page bitmap",
-  NULL, NULL, FALSE);
+  track_changed_pages_check,
+  NULL, FALSE);
 
 static MYSQL_SYSVAR_ULONGLONG(max_bitmap_file_size, srv_max_bitmap_file_size,
     PLUGIN_VAR_RQCMDARG,

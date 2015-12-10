@@ -1504,10 +1504,11 @@ innobase_next_autoinc(
 	if (next_value == 0) {
 		ulonglong	next;
 
-		if (current > offset) {
+		if (current >= offset) {
 			next = (current - offset) / step;
 		} else {
-			next = (offset - current) / step;
+			next = 0;
+			block -= step;
 		}
 
 		ut_a(max_value > next);
@@ -4053,7 +4054,7 @@ ha_innobase::open(
 				}
 
 				ib_table = dict_table_get(
-					par_case_name, FALSE, ignore_err);
+					par_case_name, TRUE, ignore_err);
 			}
 			if (ib_table) {
 #ifndef __WIN__
@@ -5214,9 +5215,9 @@ ha_innobase::write_row(
 	DBUG_ENTER("ha_innobase::write_row");
 
 	if (prebuilt->trx != trx) {
-	  sql_print_error("The transaction object for the table handle is at "
-			  "%p, but for the current thread it is at %p",
-			  (const void*) prebuilt->trx, (const void*) trx);
+		sql_print_error("The transaction object for the table handle is at "
+			"%p, but for the current thread it is at %p",
+			(const void*) prebuilt->trx, (const void*) trx);
 
 		fputs("InnoDB: Dump of 200 bytes around prebuilt: ", stderr);
 		ut_print_buf(stderr, ((const byte*)prebuilt) - 100, 200);
@@ -6648,13 +6649,23 @@ create_table_def(
 
 	/* MySQL does the name length check. But we do additional check
 	on the name length here */
-	if (strlen(table_name) > MAX_FULL_NAME_LEN) {
+	const size_t	table_name_len = strlen(table_name);
+	if (table_name_len > MAX_FULL_NAME_LEN) {
 		push_warning_printf(
 			(THD*) trx->mysql_thd, MYSQL_ERROR::WARN_LEVEL_WARN,
 			ER_TABLE_NAME,
 			"InnoDB: Table Name or Database Name is too long");
 
 		DBUG_RETURN(ER_TABLE_NAME);
+	}
+
+	if (table_name[table_name_len - 1] == '/') {
+		push_warning_printf(
+			(THD*) trx->mysql_thd, MYSQL_ERROR::WARN_LEVEL_WARN,
+			ER_TABLE_NAME,
+			"InnoDB: Table name is empty");
+
+		DBUG_RETURN(ER_WRONG_TABLE_NAME);
 	}
 
 	n_cols = form->s->fields;
@@ -10445,15 +10456,12 @@ ha_innobase::get_auto_increment(
 
 		current = *first_value;
 
-		/* If the increment step of the auto increment column
-		decreases then it is not affecting the immediate
-		next value in the series. */
-		if (prebuilt->autoinc_increment > increment) {
+		if (prebuilt->autoinc_increment != increment) {
 
 			current = autoinc - prebuilt->autoinc_increment;
 
 			current = innobase_next_autoinc(
-				current, 1, increment, 1, col_max_value);
+				current, 1, increment, offset, col_max_value);
 
 			dict_table_autoinc_initialize(prebuilt->table, current);
 
