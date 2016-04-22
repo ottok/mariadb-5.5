@@ -1,5 +1,5 @@
 /* Copyright (c) 2000, 2013, Oracle and/or its affiliates.
-   Copyright (c) 2009, 2013, Monty Program Ab.
+   Copyright (c) 2009, 2016, Monty Program Ab.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -5211,7 +5211,7 @@ static st_error global_error_names[] =
 #include <my_base.h>
 static st_error handler_error_names[] =
 {
-  { "<No error>", -1U, "" },
+  { "<No error>", UINT_MAX, "" },
 #include <handler_ername.h>
   { 0, 0, 0 }
 };

@@ -807,6 +807,19 @@ void SSL::set_random(const opaque* random, ConnectionEnd sender)
 // store client pre master secret
 void SSL::set_preMaster(const opaque* pre, uint sz)
 {
+    uint i(0);  // trim leading zeros
+    uint fullSz(sz);
+
+    while (i++ < fullSz && *pre == 0) {
+        sz--;
+        pre++;
+    }
+
+    if (sz == 0) {
+        SetError(bad_input);
+        return;
+    }
+
     secure_.use_connection().AllocPreSecret(sz);
     memcpy(secure_.use_connection().pre_master_secret_, pre, sz);
 }
@@ -924,6 +937,8 @@ void SSL::order_error()
 // Create and store the master secret see page 32, 6.1
 void SSL::makeMasterSecret()
 {
+    if (GetError()) return;
+
     if (isTLS())
         makeTLSMasterSecret();
     else {
@@ -1540,7 +1555,9 @@ void SSL_SESSION::CopyX509(X509* x)
 
     peerX509_ = NEW_YS X509(issuer->GetName(), issuer->GetLength(),
         subject->GetName(), subject->GetLength(), (const char*) before->data,
-        before->length, (const char*) after->data, after->length);
+        before->length, (const char*) after->data, after->length,
+        issuer->GetCnPosition(), issuer->GetCnLength(),
+        subject->GetCnPosition(), subject->GetCnLength());
 }
 
 
@@ -2457,8 +2474,8 @@ void Security::set_resuming(bool b)
 }
 
 
-X509_NAME::X509_NAME(const char* n, size_t sz)
-    : name_(0), sz_(sz)
+X509_NAME::X509_NAME(const char* n, size_t sz, int pos, int len)
+    : name_(0), sz_(sz), cnPosition_(pos), cnLen_(len)
 {
     if (sz) {
         name_ = NEW_YS char[sz];
@@ -2488,8 +2505,9 @@ size_t X509_NAME::GetLength() const
 
 
 X509::X509(const char* i, size_t iSz, const char* s, size_t sSz,
-           const char* b, int bSz, const char* a, int aSz)
-    : issuer_(i, iSz), subject_(s, sSz),
+           const char* b, int bSz, const char* a, int aSz, int issPos,
+           int issLen, int subPos, int subLen)
+    : issuer_(i, iSz, issPos, issLen), subject_(s, sSz, subPos, subLen),
       beforeDate_(b, bSz), afterDate_(a, aSz)
 {}
 
@@ -2523,17 +2541,19 @@ ASN1_STRING* X509_NAME::GetEntry(int i)
     if (i < 0 || i >= int(sz_))
         return 0;
 
+    if (i != cnPosition_ || cnLen_ <= 0)   // only entry currently supported
+        return 0;
+
+    if (cnLen_ > int(sz_-i))   // make sure there's room in read buffer
+        return 0;
+
     if (entry_.data)
         ysArrayDelete(entry_.data);
-    entry_.data = NEW_YS byte[sz_];       // max size;
+    entry_.data = NEW_YS byte[cnLen_+1];       // max size;
 
-    memcpy(entry_.data, &name_[i], sz_ - i);
-    if (entry_.data[sz_ -i - 1]) {
-        entry_.data[sz_ - i] = 0;
-        entry_.length = int(sz_) - i;
-    }
-    else
-        entry_.length = int(sz_) - i - 1;
+    memcpy(entry_.data, &name_[i], cnLen_);
+    entry_.data[cnLen_] = 0;
+    entry_.length = cnLen_;
     entry_.type = 0;
 
     return &entry_;

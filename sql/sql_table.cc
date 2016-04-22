@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2000, 2015, Oracle and/or its affiliates.
-   Copyright (c) 2010, 2015, MariaDB
+   Copyright (c) 2000, 2016, Oracle and/or its affiliates.
+   Copyright (c) 2010, 2016, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -2092,7 +2092,7 @@ int mysql_rm_table_no_locks(THD *thd, TABLE_LIST *tables, bool if_exists,
       const char *comment_start;
       uint32 comment_len;
 
-      built_query.set_charset(system_charset_info);
+      built_query.set_charset(thd->charset());
       if (if_exists)
         built_query.append("DROP TABLE IF EXISTS ");
       else
@@ -3135,8 +3135,31 @@ mysql_prepare_create_table(THD *thd, HA_CREATE_INFO *create_info,
 	else
 	{
 	  /* Field redefined */
+
+          /*
+            If we are replacing a BIT field, revert the increment
+            of total_uneven_bit_length that was done above.
+          */
+          if (sql_field->sql_type == MYSQL_TYPE_BIT &&
+              file->ha_table_flags() & HA_CAN_BIT_FIELD)
+            total_uneven_bit_length-= sql_field->length & 7;
+
 	  sql_field->def=		dup_field->def;
 	  sql_field->sql_type=		dup_field->sql_type;
+
+          /*
+            If we are replacing a field with a BIT field, we need
+            to initialize pack_flag. Note that we do not need to
+            increment total_uneven_bit_length here as this dup_field
+            has already been processed.
+          */
+          if (sql_field->sql_type == MYSQL_TYPE_BIT)
+          {
+            sql_field->pack_flag= FIELDFLAG_NUMBER;
+            if (!(file->ha_table_flags() & HA_CAN_BIT_FIELD))
+              sql_field->pack_flag|= FIELDFLAG_TREAT_BIT_AS_CHAR;
+          }
+
 	  sql_field->charset=		(dup_field->charset ?
 					 dup_field->charset :
 					 create_info->default_table_charset);
@@ -4857,6 +4880,9 @@ bool mysql_create_like_table(THD* thd, TABLE_LIST* table, TABLE_LIST* src_table,
   /*
     We have to write the query before we unlock the tables.
   */
+  if (thd->is_current_stmt_binlog_disabled())
+    goto err;
+
   if (thd->is_current_stmt_binlog_format_row())
   {
     /*
@@ -4898,6 +4924,21 @@ bool mysql_create_like_table(THD* thd, TABLE_LIST* table, TABLE_LIST* src_table,
           */
           if (open_table(thd, table, thd->mem_root, &ot_ctx))
             goto err;
+
+          /*
+            After opening a MERGE table add the children to the query list of
+            tables, so that children tables info can be used on "CREATE TABLE"
+            statement generation by the binary log.
+            Note that placeholders don't have the handler open.
+          */
+          if (table->table->file->extra(HA_EXTRA_ADD_CHILDREN_LIST))
+            goto err;
+
+          /*
+            As the reference table is temporary and may not exist on slave, we must
+            force the ENGINE to be present into CREATE TABLE.
+          */
+          create_info->used_fields|= HA_CREATE_USED_ENGINE;
 
           int result __attribute__((unused))=
             store_create_info(thd, table, &query,
