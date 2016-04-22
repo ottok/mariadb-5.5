@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2000, 2015, Oracle and/or its affiliates.
-   Copyright (c) 2009, 2014, MariaDB
+   Copyright (c) 2000, 2016, Oracle and/or its affiliates.
+   Copyright (c) 2009, 2016, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -1806,6 +1806,18 @@ public:
     DBUG_ASSERT(current_stmt_binlog_format == BINLOG_FORMAT_STMT ||
                 current_stmt_binlog_format == BINLOG_FORMAT_ROW);
     return current_stmt_binlog_format == BINLOG_FORMAT_ROW;
+  }
+  /**
+    Determine if binlogging is disabled for this session
+    @retval 0 if the current statement binlogging is disabled
+              (could be because of binlog closed/binlog option
+               is set to false).
+    @retval 1 if the current statement will be binlogged
+  */
+  inline bool is_current_stmt_binlog_disabled() const
+  {
+    return (!(variables.option_bits & OPTION_BIN_LOG) ||
+            !mysql_bin_log.is_open());
   }
 
 private:

@@ -2,7 +2,7 @@
 #define SQL_ITEM_INCLUDED
 
 /* Copyright (c) 2000, 2015, Oracle and/or its affiliates.
-   Copyright (c) 2009, 2015 Monty Program Ab.
+   Copyright (c) 2009, 2016, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -2175,7 +2175,7 @@ public:
     max_length= 0;
     name= name_par ? name_par : (char*) "NULL";
     fixed= 1;
-    collation.set(&my_charset_bin, DERIVATION_IGNORABLE);
+    collation.set(&my_charset_bin, DERIVATION_IGNORABLE, MY_REPERTOIRE_ASCII);
   }
   enum Type type() const { return NULL_ITEM; }
   bool eq(const Item *item, bool binary_cmp) const;

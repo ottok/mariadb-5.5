@@ -1,6 +1,6 @@
 /*
    Copyright (c) 2006, 2013, Oracle and/or its affiliates.
-   Copyright (c) 2010, 2015, MariaDB
+   Copyright (c) 2010, 2016, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -182,7 +182,8 @@ static const char *load_default_groups[]=
 static void free_used_memory(void)
 {
   /* Free memory allocated by 'load_defaults' */
-  free_defaults(defaults_argv);
+  if (defaults_argv)
+    free_defaults(defaults_argv);
 
   dynstr_free(&ds_args);
   dynstr_free(&conn_args);
@@ -1051,16 +1052,11 @@ int main(int argc, char **argv)
   /* Find mysql */
   find_tool(mysql_path, IF_WIN("mysql.exe", "mysql"), self_name);
 
-  if (!opt_systables_only)
-  {
-    /* Find mysqlcheck */
-    find_tool(mysqlcheck_path, IF_WIN("mysqlcheck.exe", "mysqlcheck"), self_name);
-  }
-  else
-  {
-    if (!opt_silent)
-      printf("The --upgrade-system-tables option was used, databases won't be touched.\n");
-  }
+  /* Find mysqlcheck */
+  find_tool(mysqlcheck_path, IF_WIN("mysqlcheck.exe", "mysqlcheck"), self_name);
+
+  if (opt_systables_only && !opt_silent)
+    printf("The --upgrade-system-tables option was used, user tables won't be touched.\n");
 
   /*
     Read the mysql_upgrade_info file to check if mysql_upgrade

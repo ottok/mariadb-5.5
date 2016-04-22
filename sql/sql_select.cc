@@ -1,5 +1,5 @@
-/* Copyright (c) 2000, 2015 Oracle and/or its affiliates.
-   Copyright (c) 2009, 2015 MariaDB
+/* Copyright (c) 2000, 2016 Oracle and/or its affiliates.
+   Copyright (c) 2009, 2016 MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -4114,17 +4114,6 @@ add_key_field(JOIN *join,
               Field *field, bool eq_func, Item **value, uint num_values,
               table_map usable_tables, SARGABLE_PARAM **sargables)
 {
-  if (field->table->reginfo.join_tab == NULL)
-  {
-    /*
-       Due to a bug in IN-to-EXISTS (grep for real_item() in item_subselect.cc
-       for more info), an index over a field from an outer query might be
-       considered here, which is incorrect. Their query has been fully
-       optimized already so their reginfo.join_tab is NULL and we reject them.
-    */
-    return;
-  }
-
   uint optimize= 0;  
   if (eq_func &&
       ((join->is_allowed_hash_join_access() &&
@@ -14555,6 +14544,14 @@ static Field *create_tmp_field_from_item(THD *thd, Item *item, TABLE *table,
   Field *new_field;
   LINT_INIT(new_field);
 
+  /*
+    To preserve type or DATE/TIME and GEOMETRY fields,
+    they need to be handled separately.
+  */
+  if (item->cmp_type() == TIME_RESULT ||
+      item->field_type() == MYSQL_TYPE_GEOMETRY)
+    new_field= item->tmp_table_field_from_field_type(table, 1);
+  else
   switch (item->result_type()) {
   case REAL_RESULT:
     new_field= new Field_double(item->max_length, maybe_null,
@@ -14577,18 +14574,11 @@ static Field *create_tmp_field_from_item(THD *thd, Item *item, TABLE *table,
   case STRING_RESULT:
     DBUG_ASSERT(item->collation.collation);
   
-    /*
-      DATE/TIME and GEOMETRY fields have STRING_RESULT result type. 
-      To preserve type they needed to be handled separately.
-    */
-    if (item->cmp_type() == TIME_RESULT ||
-        item->field_type() == MYSQL_TYPE_GEOMETRY)
-      new_field= item->tmp_table_field_from_field_type(table, 1);
     /* 
       Make sure that the blob fits into a Field_varstring which has 
       2-byte lenght. 
     */
-    else if (item->max_length/item->collation.collation->mbmaxlen > 255 &&
+    if (item->max_length/item->collation.collation->mbmaxlen > 255 &&
              convert_blob_length <= Field_varstring::MAX_SIZE && 
              convert_blob_length)
       new_field= new Field_varstring(convert_blob_length, maybe_null,
@@ -15444,9 +15434,7 @@ create_tmp_table(THD *thd, TMP_TABLE_PARAM *param, List<Item> &fields,
              field->real_type() == MYSQL_TYPE_STRING &&
 	     length >= MIN_STRING_LENGTH_TO_PACK_ROWS)
       recinfo->type= FIELD_SKIP_ENDSPACE;
-    else if (use_packed_rows &&
-             field->real_type() == MYSQL_TYPE_VARCHAR &&
-             length >= MIN_STRING_LENGTH_TO_PACK_ROWS)
+    else if (field->real_type() == MYSQL_TYPE_VARCHAR)
       recinfo->type= FIELD_VARCHAR;
     else
       recinfo->type= FIELD_NORMAL;
@@ -15953,6 +15941,12 @@ bool create_internal_tmp_table(TABLE *table, KEY *keyinfo,
       goto err;
 
     bzero(seg, sizeof(*seg) * keyinfo->key_parts);
+    /*
+       Note that a similar check is performed during
+       subquery_types_allow_materialization. See MDEV-7122 for more details as
+       to why. Whenever this changes, it must be updated there as well, for
+       all tmp_table engines.
+    */
     if (keyinfo->key_length > table->file->max_key_length() ||
 	keyinfo->key_parts > table->file->max_key_parts() ||
 	share->uniques)
@@ -16139,6 +16133,12 @@ bool create_internal_tmp_table(TABLE *table, KEY *keyinfo,
       goto err;
 
     bzero(seg, sizeof(*seg) * keyinfo->key_parts);
+    /*
+       Note that a similar check is performed during
+       subquery_types_allow_materialization. See MDEV-7122 for more details as
+       to why. Whenever this changes, it must be updated there as well, for
+       all tmp_table engines.
+    */
     if (keyinfo->key_length > table->file->max_key_length() ||
 	keyinfo->key_parts > table->file->max_key_parts() ||
 	share->uniques)
@@ -17593,7 +17593,18 @@ int join_read_key2(THD *thd, JOIN_TAB *tab, TABLE *table, TABLE_REF *table_ref)
     }
   }
 
+  /*
+    The following is needed when one makes ref (or eq_ref) access from row
+    comparisons: one must call row->bring_value() to get the new values.
+  */
+  if (tab && tab->bush_children)
+  {
+    TABLE_LIST *emb_sj_nest= tab->bush_children->start->emb_sj_nest;
+    emb_sj_nest->sj_subq_pred->left_expr->bring_value();
+  }
+
   /* TODO: Why don't we do "Late NULLs Filtering" here? */
+
   if (cmp_buffer_with_ref(thd, table, table_ref) ||
       (table->status & (STATUS_GARBAGE | STATUS_NO_PARENT | STATUS_NULL_ROW)))
   {
@@ -23117,32 +23128,52 @@ static void print_join(THD *thd,
   /* List is reversed => we should reverse it before using */
   List_iterator_fast<TABLE_LIST> ti(*tables);
   TABLE_LIST **table;
-  uint non_const_tables= 0;
+
+  /*
+    If the QT_NO_DATA_EXPANSION flag is specified, we print the
+    original table list, including constant tables that have been
+    optimized away, as the constant tables may be referenced in the
+    expression printed by Item_field::print() when this flag is given.
+    Otherwise, only non-const tables are printed.
+
+    Example:
+
+    Original SQL:
+    select * from (select 1) t
+
+    Printed without QT_NO_DATA_EXPANSION:
+    select '1' AS `1` from dual
+
+    Printed with QT_NO_DATA_EXPANSION:
+    select `t`.`1` from (select 1 AS `1`) `t`
+  */
+  const bool print_const_tables= (query_type & QT_NO_DATA_EXPANSION);
+  size_t tables_to_print= 0;
 
   for (TABLE_LIST *t= ti++; t ; t= ti++)
   {
-    /* 
-      See comment in print_table_array() about the second part of the
-      condition 
-    */
-    if (!t->optimized_away && !is_eliminated_table(eliminated_tables, t))
-      non_const_tables++;
+    /* See comment in print_table_array() about the second condition */
+    if (print_const_tables || !t->optimized_away)
+      if (!is_eliminated_table(eliminated_tables, t))
+        tables_to_print++;
   }
-  if (!non_const_tables)
+  if (tables_to_print == 0)
   {
     str->append(STRING_WITH_LEN("dual"));
     return; // all tables were optimized away
   }
   ti.rewind();
 
-  if (!(table= (TABLE_LIST **)thd->alloc(sizeof(TABLE_LIST*) *
-                                                non_const_tables)))
+  if (!(table= static_cast<TABLE_LIST **>(thd->alloc(sizeof(TABLE_LIST*) *
+                                                     tables_to_print))))
     return;  // out of memory
 
-  TABLE_LIST *tmp, **t= table + (non_const_tables - 1);
+  TABLE_LIST *tmp, **t= table + (tables_to_print - 1);
   while ((tmp= ti++))
   {
-    if (tmp->optimized_away || is_eliminated_table(eliminated_tables, tmp))
+    if (tmp->optimized_away && !print_const_tables)
+      continue;
+    if (is_eliminated_table(eliminated_tables, tmp))
       continue;
     *t--= tmp;
   }
@@ -23162,7 +23193,7 @@ static void print_join(THD *thd,
   */
   if ((*table)->sj_inner_tables)
   {
-    TABLE_LIST **end= table + non_const_tables;
+    TABLE_LIST **end= table + tables_to_print;
     for (TABLE_LIST **t2= table; t2!=end; t2++)
     {
       if (!(*t2)->sj_inner_tables)
@@ -23175,7 +23206,7 @@ static void print_join(THD *thd,
     }
   }
   print_table_array(thd, eliminated_tables, str, table, 
-                    table +  non_const_tables, query_type);
+                    table +  tables_to_print, query_type);
 }
 
 /**
