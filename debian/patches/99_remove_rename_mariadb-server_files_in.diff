@@ -1,9 +1,9 @@
 Author: Otto Kekäläinen <otto@seravo.fi>
 Description: Remove upstream debian/* handling that is obsolete
 
---- old/CMakeLists.txt	2014-01-29 20:55:56.499842093 +0200
-+++ new/CMakeLists.txt	2014-01-31 17:12:27.633594128 +0200
-@@ -436,12 +436,6 @@ CONFIGURE_FILE(
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -438,12 +438,6 @@ CONFIGURE_FILE(
      ${CMAKE_SOURCE_DIR}/cmake/info_macros.cmake.in
      ${CMAKE_BINARY_DIR}/info_macros.cmake @ONLY)
  

@@ -4,9 +4,9 @@
 ## DP: Executes /etc/init.d/mysql on signals
 ## DP: Reported as http://bugs.mysql.com/bug.php?id=31361
 
---- a/scripts/mysqld_safe.sh	2013-01-11 16:02:41 +0000
-+++ b/scripts/mysqld_safe.sh	2013-01-11 16:03:14 +0000
-@@ -33,7 +33,6 @@ err_log=
+--- a/scripts/mysqld_safe.sh
++++ b/scripts/mysqld_safe.sh
+@@ -33,7 +33,6 @@ err_log_base=
  syslog_tag_mysqld=mysqld
  syslog_tag_mysqld_safe=mysqld_safe
  
@@ -37,4 +37,3 @@
  # Uncomment the following lines if you want all tables to be automatically
  # checked and repaired during startup. You should add sensible key_buffer
  # and sort_buffer values to my.cnf to improve check performance or require
-

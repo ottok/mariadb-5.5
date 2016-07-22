@@ -1,6 +1,19 @@
+mariadb-5.5 (5.5.50-1ubuntu0.14.04.1) trusty-security; urgency=low
+
+  * SECURITY UPDATE: New upstream release 5.5.50 (LP: #1605493)
+    - CVE-2016-5440
+    - CVE-2016-3615
+    - CVE-2016-3521
+    - CVE-2016-3477
+  * Update previous changelog entries to contain new CVE identifiers
+
+ -- Otto Kekäläinen <otto@debian.org>  Fri, 22 Jul 2016 09:24:36 +0300
+
 mariadb-5.5 (5.5.49-1ubuntu0.14.04.1) trusty-security; urgency=low
 
   * SECURITY UPDATE: New upstream release 5.5.49
+    - CVE-2016-5444
+    - CVE-2016-3452
     - CVE-2016-0647
     - CVE-2016-0648
     - CVE-2016-0666
@@ -41,6 +54,8 @@ mariadb-5.5 (5.5.47-1ubuntu0.14.04.1) trusty-security; urgency=low
 mariadb-5.5 (5.5.46-1ubuntu0.14.04.2) trusty-security; urgency=low
 
   * SECURITY UPDATE: Update to 5.5.46 to fix security issues (LP: #1512241):
+    - CVE-2016-3471
+    - CVE-2015-7744
     - CVE-2015-4913
     - CVE-2015-4870
     - CVE-2015-4861
