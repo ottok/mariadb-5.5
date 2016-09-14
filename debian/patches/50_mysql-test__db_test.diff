@@ -6,7 +6,7 @@
 ## DP: suite depends on them.
 --- a/mysql-test/mysql-test-run.pl
 +++ b/mysql-test/mysql-test-run.pl
-@@ -3573,6 +3573,11 @@ sub mysql_install_db {
+@@ -3556,6 +3556,11 @@ sub mysql_install_db {
      mtr_appendfile_to_file("$sql_dir/mysql_system_tables_data.sql",
  			   $bootstrap_sql_file);
  

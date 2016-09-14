@@ -6,8 +6,8 @@
 ## DP: circumstances as it is checked first. See #301741.
 ## DP: http://bugs.mysql.com/bug.php?id=6901
 
---- old/scripts/mysql_system_tables_data.sql	2008-12-04 22:59:44.000000000 +0100
-+++ new/scripts/mysql_system_tables_data.sql	2008-12-04 23:00:07.000000000 +0100
+--- a/scripts/mysql_system_tables_data.sql
++++ b/scripts/mysql_system_tables_data.sql
 @@ -30,8 +30,6 @@ SELECT LOWER( REPLACE((SELECT REPLACE(@@
  -- Fill "db" table with default grants for anyone to
  -- access database 'test' and 'test_%' if "db" table didn't exist
