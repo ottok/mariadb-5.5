@@ -1,4 +1,4 @@
-mariadb-5.5 (5.5.50-1ubuntu0.14.04.1) trusty-security; urgency=low
+mariadb-5.5 (5.5.50-1ubuntu0.14.04.1) UNRELEASED; urgency=low
 
   * SECURITY UPDATE: New upstream release 5.5.50 (LP: #1605493)
     - CVE-2016-5440
