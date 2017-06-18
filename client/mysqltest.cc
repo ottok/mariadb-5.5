@@ -1,5 +1,5 @@
 /* Copyright (c) 2000, 2013, Oracle and/or its affiliates.
-   Copyright (c) 2009, 2016, Monty Program Ab.
+   Copyright (c) 2009, 2017, MariaDB
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -1038,7 +1038,7 @@ void do_eval(DYNAMIC_STRING *query_eval, const char *query,
 	if (!(v= var_get(p, &p, 0, 0)))
         {
           report_or_die( "Bad variable in eval");
-          return;
+          DBUG_VOID_RETURN;
         }
 	dynstr_append_mem(query_eval, v->str_val, v->str_val_len);
       }
@@ -1753,7 +1753,7 @@ static int run_command(char* cmd,
   if (!(res_file= popen(cmd, "r")))
   {
     report_or_die("popen(\"%s\", \"r\") failed", cmd);
-    return -1;
+    DBUG_RETURN(-1);
   }
 
   while (fgets(buf, sizeof(buf), res_file))
@@ -2661,7 +2661,7 @@ void var_query_set(VAR *var, const char *query, const char** query_end)
     report_or_die("Query '%s' didn't return a result set", ds_query.str);
     dynstr_free(&ds_query);
     eval_expr(var, "", 0);
-    return;
+    DBUG_VOID_RETURN;
   }
   dynstr_free(&ds_query);
 
@@ -2852,7 +2852,7 @@ void var_set_query_get_value(struct st_command *command, VAR *var)
     dynstr_free(&ds_query);
     dynstr_free(&ds_col);
     eval_expr(var, "", 0);
-    return;
+    DBUG_VOID_RETURN;
   }
 
   {
@@ -2877,7 +2877,7 @@ void var_set_query_get_value(struct st_command *command, VAR *var)
                     ds_col.str, ds_query.str);
       dynstr_free(&ds_query);
       dynstr_free(&ds_col);
-      return;
+      DBUG_VOID_RETURN;
     }
     DBUG_PRINT("info", ("Found column %d with name '%s'",
                         i, fields[i].name));
@@ -3323,7 +3323,7 @@ void do_exec(struct st_command *command)
   if (!*cmd)
   {
     report_or_die("Missing argument in exec");
-    return;
+    DBUG_VOID_RETURN;
   }
   command->last_argument= command->end;
 
@@ -3357,7 +3357,7 @@ void do_exec(struct st_command *command)
     dynstr_free(&ds_cmd);
     if (command->abort_on_error)
       report_or_die("popen(\"%s\", \"r\") failed", command->first_argument);
-    return;
+    DBUG_VOID_RETURN;
   }
 
   ds_result= &ds_res;
@@ -3415,7 +3415,7 @@ void do_exec(struct st_command *command)
                     ds_cmd.str, error, status, errno,
                     ds_res.str);
       dynstr_free(&ds_cmd);
-      return;
+      DBUG_VOID_RETURN;
     }
 
     DBUG_PRINT("info",
@@ -3547,7 +3547,7 @@ void do_system(struct st_command *command)
   if (strlen(command->first_argument) == 0)
   {
     report_or_die("Missing arguments to system, nothing to do!");
-    return;
+    DBUG_VOID_RETURN;
   }
 
   init_dynamic_string(&ds_cmd, 0, command->query_len + 64, 256);
@@ -4540,7 +4540,7 @@ void do_perl(struct st_command *command)
       if (command->abort_on_error)
         die("popen(\"%s\", \"r\") failed", buf);
       dynstr_free(&ds_delimiter);
-      return;
+      DBUG_VOID_RETURN;
     }
 
     while (fgets(buf, sizeof(buf), res_file))
@@ -5900,6 +5900,7 @@ void do_connect(struct st_command *command)
   my_bool con_ssl= 0, con_compress= 0;
   my_bool con_pipe= 0;
   my_bool con_shm __attribute__ ((unused))= 0;
+  int connect_timeout= 0;
   struct st_connection* con_slot;
 
   static DYNAMIC_STRING ds_connection_name;
@@ -5996,6 +5997,9 @@ void do_connect(struct st_command *command)
       con_pipe= 1;
     else if (length == 3 && !strncmp(con_options, "SHM", 3))
       con_shm= 1;
+    else if (strncasecmp(con_options, "connect_timeout=",
+                         sizeof("connect_timeout=")-1) == 0)
+      connect_timeout= atoi(con_options + sizeof("connect_timeout=")-1);
     else
       die("Illegal option to connect: %.*s", 
           (int) (end - con_options), con_options);
@@ -6065,6 +6069,10 @@ void do_connect(struct st_command *command)
 
   if (opt_protocol)
     mysql_options(con_slot->mysql, MYSQL_OPT_PROTOCOL, (char*) &opt_protocol);
+
+  if (connect_timeout)
+    mysql_options(con_slot->mysql, MYSQL_OPT_CONNECT_TIMEOUT,
+                  (char*)&connect_timeout);
 
 #ifdef HAVE_SMEM
   if (con_shm)

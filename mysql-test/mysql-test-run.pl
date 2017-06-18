@@ -102,11 +102,11 @@ use mtr_results;
 use IO::Socket::INET;
 use IO::Select;
 
-require "lib/mtr_process.pl";
-require "lib/mtr_io.pl";
-require "lib/mtr_gcov.pl";
-require "lib/mtr_gprof.pl";
-require "lib/mtr_misc.pl";
+require "mtr_process.pl";
+require "mtr_io.pl";
+require "mtr_gcov.pl";
+require "mtr_gprof.pl";
+require "mtr_misc.pl";
 
 $SIG{INT}= sub { mtr_error("Got ^C signal"); };
 $SIG{HUP}= sub { mtr_error("Hangup detected on controlling terminal"); };
@@ -3188,13 +3188,10 @@ sub mysql_server_start($) {
     if (! $opt_start_dirty)	# If dirty, keep possibly grown system db
     {
       # Copy datadir from installed system db
-      for my $path ( "$opt_vardir", "$opt_vardir/..") {
-        my $install_db= "$path/install.db";
-        copytree($install_db, $datadir)
-          if -d $install_db;
-      }
-      mtr_error("Failed to copy system db to '$datadir'")
-        unless -d $datadir;
+      my $path= ($opt_parallel == 1) ? "$opt_vardir" : "$opt_vardir/..";
+      my $install_db= "$path/install.db";
+      copytree($install_db, $datadir) if -d $install_db;
+      mtr_error("Failed to copy system db to '$datadir'") unless -d $datadir;
     }
   }
   else
@@ -6193,6 +6190,15 @@ sub valgrind_arguments {
     mtr_add_arg($args, "--num-callers=16");
     mtr_add_arg($args, "--suppressions=%s/valgrind.supp", $glob_mysql_test_dir)
       if -f "$glob_mysql_test_dir/valgrind.supp";
+    my $temp= `ldd $ENV{MTR_BINDIR}/sql/mysqld | grep 'libjemalloc'`;
+    if ($temp)
+    {
+      mtr_add_arg($args, "--soname-synonyms=somalloc=libjemalloc*");
+    }
+    else
+    {
+      mtr_add_arg($args, "--soname-synonyms=somalloc=NONE");
+    }
   }
 
   # Add valgrind options, can be overriden by user
