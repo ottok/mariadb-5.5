@@ -6,7 +6,7 @@
 
 --- a/scripts/mysql_install_db.sh
 +++ b/scripts/mysql_install_db.sh
-@@ -372,7 +372,7 @@ then
+@@ -374,7 +374,7 @@ then
  fi
  
  # Create database directories
